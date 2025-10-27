@@ -1,0 +1,71 @@
+export const runtime = 'nodejs';
+import { NextRequest, NextResponse } from 'next/server';
+import { getOrCreateUser, createSubscription } from '@/lib/supabase';
+
+function getPlanDisplayName(planId: string): string {
+  const planNames: Record<string, string> = {
+    '3-coffees': '3 coffees / week',
+    'daily-coffee': 'Daily coffee',
+    'creator': 'Creator+ (Bundle & Save)',
+    'unlimited': 'House 4/day (Bundle & Save)',
+  };
+  return planNames[planId] || 'Membership';
+}
+
+import { sendMail, renderCashPaymentReminderEmail } from '@/lib/email';
+
+export async function POST(request: NextRequest) {
+  try {
+    const { email, name, phone, planId } = await request.json();
+
+    if (!email || !name || !planId) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // 1) Get or create user
+    const user = await getOrCreateUser({ email, name, phone });
+
+    // 2) Create subscription with pending_payment
+    const now = new Date();
+    const periodStart = now.toISOString();
+    const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+    const subscription = await createSubscription({
+      userId: user.id,
+      planId,
+      planName: getPlanDisplayName(planId),
+      status: 'pending_payment',
+      currentPeriodStart: periodStart,
+      currentPeriodEnd: periodEnd,
+    });
+
+    // Send cash payment reminder email (non-blocking on failures)
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
+      const emailTpl = renderCashPaymentReminderEmail({
+        name: user.name || 'Member',
+        planName: getPlanDisplayName(planId),
+        baseUrl,
+      });
+      await sendMail({ to: user.email, subject: emailTpl.subject, html: emailTpl.html });
+    } catch (e) {
+      console.warn('Cash payment reminder email skipped/failed:', e);
+    }
+
+    return NextResponse.json({
+      success: true,
+      user: { id: user.id, email: user.email, name: user.name },
+      subscription: {
+        id: subscription.id,
+        status: subscription.status,
+        planId: subscription.plan_id,
+        planName: subscription.plan_name,
+      }
+    });
+  } catch (error: any) {
+    console.error('Join API error:', error);
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+  }
+}
+
+

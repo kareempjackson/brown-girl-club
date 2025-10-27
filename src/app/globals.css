@@ -1,26 +1,312 @@
 @import "tailwindcss";
 
+/* Font face declarations */
+@font-face {
+  font-family: "Mailendra";
+  src: url("/fonts/mailendra-regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Frank Ruhl Libre";
+  src: url("/fonts/FrankRuhlLibre-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Root variables for brand system */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand colors */
+  --color-espresso: #4B2E22;
+  --color-porcelain: #F2E4D2;
+  --color-oat: #D9BE8A;
+  --color-ink: #292929;
+  --color-white: #FFFFFF;
+  
+  /* Semantic colors */
+  --color-bg: var(--color-white);
+  --color-surface: var(--color-porcelain);
+  --color-text: var(--color-ink);
+  --color-accent: var(--color-espresso);
+  --color-accent-2: var(--color-oat);
+  
+  /* Fonts */
+  --font-display: "Mailendra", "Georgia", serif;
+  --font-sans: "Frank Ruhl Libre", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  
+  /* Typography scale */
+  --text-xs: 0.78rem;
+  --text-sm: 0.90rem;
+  --text-base: 1.00rem;
+  --text-md: 1.05rem;
+  --text-lg: 1.20rem;
+  --text-xl: 1.44rem;
+  --text-2xl: 1.80rem;
+  --text-3xl: 2.20rem;
+  --text-4xl: 2.80rem;
+  --text-5xl: 3.40rem;
+  
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  
+  /* Shadows */
+  --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-elev: 0 4px 8px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* Base styles */
+@layer base {
+  html {
+    font-size: 15px; /* Mobile-first: smaller base */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  @media (min-width: 640px) {
+    html {
+      font-size: 16px; /* Scale up for tablet and desktop */
+    }
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-text);
+    background: var(--color-porcelain);
+    line-height: 1.6;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+  }
+
+  /* Improve touch targets on mobile */
+  button, a {
+    min-height: 44px; /* Apple's recommended touch target size */
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Better text rendering on mobile */
+  @media (max-width: 639px) {
+    body {
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Typography helpers */
+@layer utilities {
+  .text-serif {
+    font-family: var(--font-display);
+  }
+
+  .text-sans {
+    font-family: var(--font-sans);
+  }
+
+  .kicker {
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: var(--color-accent);
+  }
+
+  .lead {
+    font-size: var(--text-lg);
+    line-height: 1.5;
+    color: var(--color-ink);
+    max-width: 42rem;
+  }
+
+  /* Thin rule utility */
+  .rule-thin {
+    height: 1px;
+    background: var(--color-ink);
+    opacity: 0.12;
+    border: none;
+  }
+
+  /* Card primitive */
+  .card {
+    background: var(--color-bg);
+    border: 1px solid rgba(41, 41, 41, 0.12);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+    padding: 2rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-surface {
+    background: var(--color-surface);
+    border: 1px solid rgba(75, 46, 34, 0.15);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+    padding: 2rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Link styles */
+  .link-underline {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 1px;
+    transition: opacity 0.2s ease;
+  }
+
+  .link-underline:hover {
+    opacity: 0.7;
+  }
+}
+
+/* Focus visible */
+@layer base {
+  *:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+/* Hide scrollbar for scroll sections */
+@layer utilities {
+  .scroll-smooth::-webkit-scrollbar,
+  .overflow-x-scroll::-webkit-scrollbar,
+  .overflow-x-auto::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Mobile-specific utilities */
+  @media (max-width: 639px) {
+    /* Reduce motion on mobile for better performance */
+    .will-change-transform {
+      will-change: auto;
+    }
+
+    /* Optimize scroll performance on mobile */
+    .overflow-x-scroll, .overflow-x-auto {
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x mandatory;
+      scroll-padding: 1.25rem;
+    }
+
+    /* Snap alignment for cards */
+    .snap-x {
+      scroll-snap-type: x mandatory;
+      scroll-snap-stop: always;
+    }
+
+    .snap-start {
+      scroll-snap-align: start;
+      scroll-margin-left: 1.25rem;
+    }
+
+    .snap-center {
+      scroll-snap-align: center;
+    }
+
+    .snap-mandatory {
+      scroll-snap-type: x mandatory;
+    }
+
+    /* Better touch feedback */
+    button:active, a:active {
+      opacity: 0.7;
+    }
+  }
+
+  /* Custom animations */
+  @keyframes bounce-x {
+    0%, 100% {
+      transform: translateX(0);
+    }
+    50% {
+      transform: translateX(4px);
+    }
+  }
+
+  .animate-bounce-x {
+    animation: bounce-x 1.5s ease-in-out infinite;
+  }
+
+  /* Hero background subtle zoom */
+  @keyframes hero-zoom-in {
+    0% { transform: scale(1.02); }
+    100% { transform: scale(1.08); }
+  }
+
+  .hero-zoom {
+    animation: hero-zoom-in 14s ease-in-out alternate infinite;
+  }
+
+  /* Cursor-follow radial light for hero */
+  .hero-light {
+    background: radial-gradient(400px 400px at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.18), transparent 60%);
+    transition: background-position 120ms ease, opacity 300ms ease;
+    mix-blend-mode: screen;
+  }
+
+  /* Additional rotation utilities for polaroid effect */
+  .rotate-4 {
+    transform: rotate(4deg);
+  }
+  
+  .-rotate-4 {
+    transform: rotate(-4deg);
+  }
+  
+  .rotate-5 {
+    transform: rotate(5deg);
+  }
+  
+  .-rotate-5 {
+    transform: rotate(-5deg);
+  }
+  
+  .rotate-6 {
+    transform: rotate(6deg);
+  }
+  
+  .-rotate-6 {
+    transform: rotate(-6deg);
+  }
+  
+  .rotate-7 {
+    transform: rotate(7deg);
+  }
+  
+  .-rotate-7 {
+    transform: rotate(-7deg);
+  }
+
+  /* Optimize polaroid hover performance */
+  figure.cursor-pointer {
+    transition-property: transform, box-shadow;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-out;
+  }
+
+  /* Mobile-optimized spacing */
+  @media (max-width: 639px) {
+    .container {
+      padding-left: 1.25rem;
+      padding-right: 1.25rem;
+    }
+  }
+}
+
+/* Reduce motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
