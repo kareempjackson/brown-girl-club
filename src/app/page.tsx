@@ -31,20 +31,20 @@ export default function HomePage() {
 
   // Collage images (served from public/images/collage)
   const collageImages = [
-    '/images/collage/P1457169.jpg',
-    '/images/collage/P1457180.jpg',
-    '/images/collage/P1457206.jpg',
-    '/images/collage/P1457218.jpg',
-    '/images/collage/P1457225.jpg',
-    '/images/collage/P1457240.jpg',
-    '/images/collage/P1457253.jpg',
-    '/images/collage/P1457606.jpg',
-    '/images/collage/P1457610.jpg',
-    '/images/collage/P1457625.jpg',
-    '/images/collage/P1457632.jpg',
-    '/images/collage/P1457651.jpg',
-    '/images/collage/Photo Oct 07 2025, 10 49 33 AM.jpg',
-    '/images/collage/Photo Oct 07 2025, 11 03 17 AM.jpg'
+    'https://eouiynfsgaiavzvlfwpa.supabase.co/storage/v1/object/public/club_img/collage/P1457169.jpg',
+    'https://eouiynfsgaiavzvlfwpa.supabase.co/storage/v1/object/public/club_img/collage/P1457180.jpg',
+    'https://eouiynfsgaiavzvlfwpa.supabase.co/storage/v1/object/public/club_img/collage/P1457206.jpg',
+    'https://eouiynfsgaiavzvlfwpa.supabase.co/storage/v1/object/public/club_img/collage/P1457218.jpg',
+    'https://eouiynfsgaiavzvlfwpa.supabase.co/storage/v1/object/public/club_img/collage/P1457225.jpg',
+    'https://eouiynfsgaiavzvlfwpa.supabase.co/storage/v1/object/public/club_img/collage/P1457240.jpg',
+    'https://eouiynfsgaiavzvlfwpa.supabase.co/storage/v1/object/public/club_img/collage/P1457253.jpg',
+    'https://eouiynfsgaiavzvlfwpa.supabase.co/storage/v1/object/public/club_img/collage/P1457606.jpg',
+    'https://eouiynfsgaiavzvlfwpa.supabase.co/storage/v1/object/public/club_img/collage/P1457610.jpg',
+    'https://eouiynfsgaiavzvlfwpa.supabase.co/storage/v1/object/public/club_img/collage/P1457625.jpg',
+    'https://eouiynfsgaiavzvlfwpa.supabase.co/storage/v1/object/public/club_img/collage/P1457632.jpg',
+    'https://eouiynfsgaiavzvlfwpa.supabase.co/storage/v1/object/public/club_img/collage/P1457651.jpg',
+    'https://eouiynfsgaiavzvlfwpa.supabase.co/storage/v1/object/public/club_img/collage/Photo%20Oct%2007%202025,%2010%2049%2033%20AM.jpg',
+    'https://eouiynfsgaiavzvlfwpa.supabase.co/storage/v1/object/public/club_img/collage/Photo%20Oct%2007%202025,%2011%2003%2017%20AM.jpg'
   ];
 
   // Up to 14 collage positions; we will only render as many as we have images (no repeats)
@@ -78,7 +78,7 @@ export default function HomePage() {
           <div
             className="absolute inset-0 bg-center bg-cover will-change-transform hero-zoom"
             style={{
-              backgroundImage: "url(/images/P1457240.jpg)",
+              backgroundImage: "url(https://eouiynfsgaiavzvlfwpa.supabase.co/storage/v1/object/public/club_img/P1457240.jpg)",
               transform: "translate3d(var(--tx,0), var(--ty,0), 0) scale(1.06)",
             }}
           />
@@ -748,11 +748,11 @@ function CoffeeScrollSection() {
           >
             <div className="flex gap-4 sm:gap-5 lg:gap-8 min-w-max">
               <CoffeeCard 
-                image="/images/P1457231.jpg"
+                image="https://eouiynfsgaiavzvlfwpa.supabase.co/storage/v1/object/public/club_img/P1457231.jpg"
                 name="Grenadian Mocha"
               />
               <CoffeeCard 
-                image="/images/aerochino.jpg"
+                image="https://eouiynfsgaiavzvlfwpa.supabase.co/storage/v1/object/public/club_img/aerochino.jpg"
                 name="Aerochino"
               />
             </div>
