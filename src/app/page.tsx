@@ -266,7 +266,7 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto px-5 sm:px-6 lg:px-8 text-center relative z-10">
           <p className="kicker mb-4 sm:mb-6">Ready to slow down?</p>
           <h2 className="text-serif text-4xl sm:text-5xl md:text-6xl text-[var(--color-accent)] mb-6 sm:mb-8 leading-tight">
-            Your ritual starts here.
+            At Brown Girl, You are Family.
           </h2>
           <p className="text-base sm:text-lg md:text-xl text-[var(--color-ink)]/80 leading-relaxed mb-8 sm:mb-10 md:mb-12 max-w-2xl mx-auto">
             Join a community built on rhythm, taste, and good energy. Scan in-store or sign up online — your pass arrives in seconds.
@@ -325,7 +325,7 @@ function FeatureBandSection() {
         </svg>
       ),
       title: "Globally sourced. Locally crafted.",
-      description: "Cupped, tested, developed and roasted at our Coffee Lab right here in South London."
+      description: "A warm cup from across the world, made to feel like home right here at Brown Girl Café."
     },
     {
       icon: (
@@ -337,7 +337,7 @@ function FeatureBandSection() {
         </svg>
       ),
       title: "Modern Coffee. Holistic approach.",
-      description: "It encapsulates the attention to detail, creativity, and focus on provenance and quality."
+      description: "More than coffee. It’s a space to breathe, connect, and feel grounded when you’re far from home."
     },
     {
       icon: (
@@ -350,7 +350,7 @@ function FeatureBandSection() {
         </svg>
       ),
       title: "No two Houses the same.",
-      description: "Each of our locations are designed to play a contemporary role in the Modern Coffee experience."
+      description: "Each Brown Girl Café has its own rhythm, but every one welcomes you like home."
     }
   ];
 

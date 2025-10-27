@@ -2,6 +2,7 @@ export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from 'next/server';
 import { createMagicToken } from '@/lib/user-auth';
 import { sendMail, renderMagicLinkEmail } from '@/lib/email';
+import { getBaseUrl } from '@/lib/url';
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,7 +10,7 @@ export async function POST(req: NextRequest) {
     if (!email) return NextResponse.json({ error: 'Email is required' }, { status: 400 });
 
     const token = createMagicToken(email);
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || req.nextUrl.origin;
+    const baseUrl = getBaseUrl(req.nextUrl.origin);
     const redirect = typeof redirectTo === 'string' && redirectTo.startsWith('/') ? redirectTo : '/dashboard';
     const verifyUrl = `${baseUrl}/api/auth/magic/verify?token=${encodeURIComponent(token)}&redirect=${encodeURIComponent(redirect)}`;
 

@@ -13,6 +13,7 @@ function getPlanDisplayName(planId: string): string {
 }
 
 import { sendMail, renderCashPaymentReminderEmail } from '@/lib/email';
+import { getBaseUrl } from '@/lib/url';
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     // Send cash payment reminder email (non-blocking on failures)
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
+      const baseUrl = getBaseUrl(request.nextUrl.origin);
       const emailTpl = renderCashPaymentReminderEmail({
         name: user.name || 'Member',
         planName: getPlanDisplayName(planId),

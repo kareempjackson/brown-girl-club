@@ -105,7 +105,7 @@ npm run build
 npm start
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) to view the application.
+Visit your local dev server (e.g., http://localhost:3000) or the configured base URL in `NEXT_PUBLIC_BASE_URL` to view the application.
 
 ## Accessibility
 
