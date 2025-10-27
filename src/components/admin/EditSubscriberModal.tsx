@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { Subscriber, SubscriptionStatus, PlanId } from "@/app/admin/page";
+import type { Subscriber, SubscriptionStatus, PlanId } from "@/app/admin/(protected)/DashboardPage";
 
 interface EditSubscriberModalProps {
   subscriber: Subscriber;

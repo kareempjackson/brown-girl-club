@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       let invoice: any = null;
       let invoiceError: any = null;
       try {
-        const res = await supabase
+        const res = await (supabase as any)
           .from('invoices')
           .insert({
             user_id: subscription.user_id,
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       if (invoiceError && String(invoiceError?.message || '').includes("issued_by")) {
         // Retry without issued_by column (older schema)
         try {
-          const res2 = await supabase
+          const res2 = await (supabase as any)
             .from('invoices')
             .insert({
               user_id: subscription.user_id,
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       if (invoiceError && String(invoiceError?.message || '').includes("subscription_id")) {
         // Retry without subscription_id if column missing in schema
         try {
-          const res3 = await supabase
+          const res3 = await (supabase as any)
             .from('invoices')
             .insert({
               user_id: subscription.user_id,
@@ -113,7 +113,6 @@ export async function POST(request: NextRequest) {
           amount,
           currency: 'XCD',
           invoiceId: invoice.id,
-          walletPassUrl: undefined,
         });
         await sendMail({
           to: (subscription as any).users?.email || '',

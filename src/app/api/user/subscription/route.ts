@@ -5,6 +5,7 @@ import { cookies } from 'next/headers';
 import { verifyUserToken } from '@/lib/user-auth';
 import { supabase } from '@/lib/supabase';
 import { getTodayUsageSummary, getRedemptionHistory, validateRedemption } from '@/lib/redemption';
+import type { Database } from '@/lib/supabase';
 
 /**
  * GET /api/user/subscription?userId=xxx
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user
-    let user;
+    let user: Database['public']['Tables']['users']['Row'] | null = null;
     if (userId) {
       const { data, error } = await supabase
         .from('users')
@@ -43,16 +44,16 @@ export async function GET(request: NextRequest) {
         .single();
       
       if (error) throw error;
-      user = data;
+      user = data as Database['public']['Tables']['users']['Row'];
     } else {
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .eq('email', email)
+        .eq('email', String(email))
         .single();
       
       if (error) throw error;
-      user = data;
+      user = data as Database['public']['Tables']['users']['Row'];
     }
 
     if (!user) {
@@ -63,13 +64,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Get subscriptions
-    const { data: subscriptions, error: subError } = await supabase
+    const subsRes = await supabase
       .from('subscriptions')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
-    if (subError) throw subError;
+    if (subsRes.error) throw subsRes.error;
+    const subscriptions = (subsRes.data as unknown) as Database['public']['Tables']['subscriptions']['Row'][];
 
     const activeSubscription = subscriptions?.find(s => s.status === 'active');
 

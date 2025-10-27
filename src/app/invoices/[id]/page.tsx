@@ -1,11 +1,18 @@
 import { supabase } from '@/lib/supabase';
+import type { Database } from '@/lib/supabase';
+
+type InvoiceWithJoins = Database['public']['Tables']['invoices']['Row'] & {
+  users?: Database['public']['Tables']['users']['Row'] | null;
+  subscriptions?: Database['public']['Tables']['subscriptions']['Row'] | null;
+};
 
 export default async function InvoicePage({ params }: { params: { id: string } }) {
-  const { data: invoice } = await supabase
+  const res = await supabase
     .from('invoices')
     .select('*, users:users(*), subscriptions:subscriptions(*)')
     .eq('id', params.id)
     .single();
+  const invoice = (res.data as unknown) as InvoiceWithJoins | null;
 
   if (!invoice) {
     return (

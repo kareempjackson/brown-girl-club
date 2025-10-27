@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import type { Subscriber } from "@/app/admin/page";
+import type { Subscriber } from "@/app/admin/(protected)/DashboardPage";
 
 interface SubscriberTableProps {
   subscribers: Subscriber[];

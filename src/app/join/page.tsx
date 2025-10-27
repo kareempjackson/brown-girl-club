@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export default function JoinPage() {
+export default function Page() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading…</div>}>
+      <JoinClient />
+    </Suspense>
+  );
+}
+
+function JoinClient() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", planId: "daily-coffee" });
   const [isSubmitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<null | { subscriptionId: string; planName: string }>(null);

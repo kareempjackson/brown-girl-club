@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -50,7 +50,24 @@ interface ValidationResponse {
   usageToday?: any[];
 }
 
-export default function RedeemPage() {
+export default function Page() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="p-8 max-w-md w-full">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading scanner…</p>
+          </div>
+        </Card>
+      </div>
+    }>
+      <RedeemClient />
+    </Suspense>
+  );
+}
+
+function RedeemClient() {
   const searchParams = useSearchParams();
   const code = searchParams.get('code'); // User ID from QR code
 
@@ -263,7 +280,7 @@ export default function RedeemPage() {
           {/* Item Type Selector */}
           <div className="flex gap-2 mb-6">
             <Button
-              variant={selectedItemType === 'coffee' ? 'default' : 'outline'}
+              variant={selectedItemType === 'coffee' ? 'primary' : 'secondary'}
               onClick={() => {
                 setSelectedItemType('coffee');
                 setSelectedItem('');
@@ -273,7 +290,7 @@ export default function RedeemPage() {
               ☕ Coffee
             </Button>
             <Button
-              variant={selectedItemType === 'food' ? 'default' : 'outline'}
+              variant={selectedItemType === 'food' ? 'primary' : 'secondary'}
               onClick={() => {
                 setSelectedItemType('food');
                 setSelectedItem('');
@@ -284,7 +301,7 @@ export default function RedeemPage() {
               🥐 Food
             </Button>
             <Button
-              variant={selectedItemType === 'dessert' ? 'default' : 'outline'}
+              variant={selectedItemType === 'dessert' ? 'primary' : 'secondary'}
               onClick={() => {
                 setSelectedItemType('dessert');
                 setSelectedItem('');

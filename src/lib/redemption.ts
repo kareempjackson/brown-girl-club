@@ -1,6 +1,7 @@
 // Redemption business logic and validation
 
-import { supabase } from './supabase';
+import { supabase, recordUsage as createUsage } from './supabase';
+import type { Database } from './supabase';
 
 function getTimezoneOffsetMinutes(): number {
   const raw = (process.env.BGC_TZ_OFFSET_MINUTES || process.env.NEXT_PUBLIC_BGC_TZ_OFFSET_MINUTES || '-240') as string;
@@ -89,7 +90,7 @@ export async function validateRedemption(
       };
     }
 
-    const subscription = subscriptions;
+    const subscription = (subscriptions as unknown) as Database['public']['Tables']['subscriptions']['Row'];
 
     // 2. Check if subscription has expired
     const now = new Date();
@@ -119,20 +120,21 @@ export async function validateRedemption(
     // 5. Get today's usage
     const startOfDay = getStartOfDayUtcDate();
 
-    const { data: usageToday, error: todayError } = await supabase
+    const todayRes = await supabase
       .from('usage')
       .select('*')
       .eq('user_id', userId)
       .gte('redeemed_at', startOfDay.toISOString());
 
-    if (todayError) {
-      console.error('Error fetching today usage:', todayError);
+    if (todayRes.error) {
+      console.error('Error fetching today usage:', todayRes.error);
       return {
         isValid: false,
         reason: 'Error checking usage',
         subscription,
       };
     }
+    const usageToday = (todayRes.data || []) as Database['public']['Tables']['usage']['Row'][];
 
     // 6. Coffee behavior
     if (itemType === 'coffee') {
@@ -168,23 +170,23 @@ export async function validateRedemption(
       // Get start of week (Monday) in cafe timezone, converted to UTC
       const startOfWeek = getStartOfWeekUtcDate();
 
-      const { data: usageThisWeek, error: weekError } = await supabase
+      const weekRes = await supabase
         .from('usage')
         .select('*')
         .eq('user_id', userId)
         .eq('item_type', 'coffee')
         .gte('redeemed_at', startOfWeek.toISOString());
 
-      if (weekError) {
-        console.error('Error fetching week usage:', weekError);
+      if (weekRes.error) {
+        console.error('Error fetching week usage:', weekRes.error);
         return {
           isValid: false,
           reason: 'Error checking usage',
           subscription,
         };
       }
-
-      const coffeesThisWeek = usageThisWeek?.length || 0;
+      const usageThisWeek = (weekRes.data || []) as Database['public']['Tables']['usage']['Row'][];
+      const coffeesThisWeek = usageThisWeek.length || 0;
       if (coffeesThisWeek >= limits.coffeePerWeek) {
         return {
           isValid: false,
@@ -197,12 +199,12 @@ export async function validateRedemption(
 
       // For weekly-limited plans, still allow unlimited per day but capped by weekly remaining
       // Add notice flag if today's redemptions exceed 5
-      const coffeesToday = (await supabase
+      const todayAgainRes = await supabase
         .from('usage')
         .select('*')
         .eq('user_id', userId)
-        .gte('redeemed_at', getStartOfDayUtcDate().toISOString())
-      ).data?.filter(u => u.item_type === 'coffee').length || 0;
+        .gte('redeemed_at', getStartOfDayUtcDate().toISOString());
+      const coffeesToday = ((todayAgainRes.data || []) as Database['public']['Tables']['usage']['Row'][]).filter(u => u.item_type === 'coffee').length || 0;
 
       return {
         isValid: true,
@@ -216,14 +218,15 @@ export async function validateRedemption(
     // 9. Enforce per-day per-subscription coffee caps for bundle plans (creator/unlimited -> 4/day)
     if (itemType === 'coffee' && limits.coffeePerDay) {
       const startOfDay = getStartOfDayUtcDate();
-      const { data: subDayUsage, error: subDayErr } = await supabase
+      const subDayRes = await supabase
         .from('usage')
         .select('*')
         .eq('subscription_id', subscription.id)
         .eq('item_type', 'coffee')
         .gte('redeemed_at', startOfDay.toISOString());
-      if (!subDayErr) {
-        const count = (subDayUsage || []).length;
+      if (!subDayRes.error) {
+        const subDayUsage = (subDayRes.data || []) as Database['public']['Tables']['usage']['Row'][];
+        const count = subDayUsage.length;
         if (count >= limits.coffeePerDay) {
           return {
             isValid: false,
@@ -265,25 +268,16 @@ export async function recordRedemption(
   itemType: 'coffee' | 'food' | 'dessert',
   itemName: string,
   location?: string
-) {
+): Promise<Database['public']['Tables']['usage']['Row']> {
   try {
-    const { data, error } = await supabase.from('usage').insert([
-      {
-        user_id: userId,
-        subscription_id: subscriptionId,
-        item_type: itemType,
-        item_name: itemName,
-        location: location || 'Main Location',
-        redeemed_at: new Date().toISOString(),
-      },
-    ]).select().single();
-
-    if (error) {
-      console.error('Error recording redemption:', error);
-      throw error;
-    }
-
-    return data;
+    const usage = await createUsage({
+      userId,
+      subscriptionId,
+      itemType,
+      itemName,
+      location,
+    });
+    return usage as Database['public']['Tables']['usage']['Row'];
   } catch (error) {
     console.error('Redemption error:', error);
     throw error;
@@ -325,11 +319,13 @@ export async function getTodayUsageSummary(userId: string) {
 
     if (error) throw error;
 
-    const coffees = data?.filter((u) => u.item_type === 'coffee').length || 0;
-    const food = data?.filter((u) => u.item_type === 'food').length || 0;
-    const desserts = data?.filter((u) => u.item_type === 'dessert').length || 0;
+    const rows = (data || []) as Database['public']['Tables']['usage']['Row'][];
 
-    return { coffees, food, desserts, total: data?.length || 0 };
+    const coffees = rows.filter((u) => u.item_type === 'coffee').length || 0;
+    const food = rows.filter((u) => u.item_type === 'food').length || 0;
+    const desserts = rows.filter((u) => u.item_type === 'dessert').length || 0;
+
+    return { coffees, food, desserts, total: rows.length || 0 };
   } catch (error) {
     console.error('Error fetching today summary:', error);
     return { coffees: 0, food: 0, desserts: 0, total: 0 };

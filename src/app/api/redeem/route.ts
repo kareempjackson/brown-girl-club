@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateRedemption, recordRedemption } from '@/lib/redemption';
 import { supabase } from '@/lib/supabase';
+import type { Database } from '@/lib/supabase';
 import { sendMail, renderRedemptionReceiptEmail } from '@/lib/email';
 
 /**
@@ -65,11 +66,13 @@ export async function POST(request: NextRequest) {
 
     // Step 4: Send redemption receipt email (best-effort)
     try {
-      const { data: user } = await supabase
+      type UserEmailName = Pick<Database['public']['Tables']['users']['Row'], 'name' | 'email'>;
+      const userRes = await supabase
         .from('users')
         .select('name, email')
         .eq('id', userId)
         .single();
+      const user = (userRes.data as unknown) as UserEmailName | null;
 
       const planName: string = validation.subscription?.plan_name || 'Membership';
 

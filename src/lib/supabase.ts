@@ -106,6 +106,30 @@ export interface Database {
           created_at?: string;
         };
       };
+      invoices: {
+        Row: {
+          id: string;
+          user_id: string;
+          subscription_id: string | null;
+          amount: number;
+          currency: string;
+          status: string;
+          paid_at: string;
+          created_at: string;
+          issued_by?: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          subscription_id?: string | null;
+          amount: number;
+          currency: string;
+          status: string;
+          paid_at: string;
+          created_at?: string;
+          issued_by?: string | null;
+        };
+      };
     };
   };
 }
@@ -141,7 +165,7 @@ export async function createUser(data: {
   name: string;
   phone?: string;
 }) {
-  const { data: user, error } = await supabase
+  const { data: user, error } = await (supabase as any)
     .from('users')
     .insert({
       id: data.id || generateUserId(),
@@ -167,9 +191,9 @@ export async function getUserByEmail(email: string) {
   return data;
 }
 
-export async function getOrCreateUser(params: { email: string; name: string; phone?: string }) {
+export async function getOrCreateUser(params: { email: string; name: string; phone?: string }): Promise<Database['public']['Tables']['users']['Row']> {
   const existing = await getUserByEmail(params.email);
-  if (existing) return existing as any;
+  if (existing) return existing as Database['public']['Tables']['users']['Row'];
   return createUser({ email: params.email, name: params.name, phone: params.phone });
 }
 
@@ -182,8 +206,8 @@ export async function createSubscription(data: {
   currentPeriodEnd: string;
   walletPassId?: string;
   walletPassUrl?: string;
-}) {
-  const { data: subscription, error } = await supabase
+}): Promise<Database['public']['Tables']['subscriptions']['Row']> {
+  const { data: subscription, error } = await (supabase as any)
     .from('subscriptions')
     .insert({
       user_id: data.userId,
@@ -199,7 +223,7 @@ export async function createSubscription(data: {
     .single();
 
   if (error) throw error;
-  return subscription;
+  return subscription as Database['public']['Tables']['subscriptions']['Row'];
 }
 
 export async function updateSubscriptionById(
@@ -213,8 +237,8 @@ export async function updateSubscriptionById(
     walletPassId?: string;
     walletPassUrl?: string;
   }
-) {
-  const { data, error } = await supabase
+): Promise<Database['public']['Tables']['subscriptions']['Row']> {
+  const { data, error } = await (supabase as any)
     .from('subscriptions')
     .update({
       status: updates.status,
@@ -231,10 +255,12 @@ export async function updateSubscriptionById(
     .single();
 
   if (error) throw error;
-  return data;
+  return data as Database['public']['Tables']['subscriptions']['Row'];
 }
 
-export async function getSubscriptionById(subscriptionId: string) {
+export async function getSubscriptionById(subscriptionId: string): Promise<
+  (Database['public']['Tables']['subscriptions']['Row'] & { users?: Database['public']['Tables']['users']['Row'] | null }) | null
+> {
   const { data, error } = await supabase
     .from('subscriptions')
     .select('*, users(*)')
@@ -242,10 +268,12 @@ export async function getSubscriptionById(subscriptionId: string) {
     .single();
 
   if (error && (error as any).code !== 'PGRST116') throw error;
-  return data;
+  return (data as unknown) as Database['public']['Tables']['subscriptions']['Row'] & {
+    users?: Database['public']['Tables']['users']['Row'] | null;
+  };
 }
 
-export async function getActiveSubscriptionByUserId(userId: string) {
+export async function getActiveSubscriptionByUserId(userId: string): Promise<Database['public']['Tables']['subscriptions']['Row'] | null> {
   // Direct subscription
   let { data, error } = await supabase
     .from('subscriptions')
@@ -276,7 +304,7 @@ export async function getActiveSubscriptionByUserId(userId: string) {
   }
 
   if (error && (error as any).code !== 'PGRST116') throw error;
-  return data;
+  return (data as unknown) as Database['public']['Tables']['subscriptions']['Row'] | null;
 }
 
 export async function recordUsage(data: {
@@ -286,7 +314,7 @@ export async function recordUsage(data: {
   itemName?: string;
   location?: string;
 }) {
-  const { data: usage, error } = await supabase
+  const { data: usage, error } = await (supabase as any)
     .from('usage')
     .insert({
       user_id: data.userId,

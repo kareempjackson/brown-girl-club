@@ -1,6 +1,7 @@
 export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, getActiveSubscriptionByUserId } from '@/lib/supabase';
+import type { Database } from '@/lib/supabase';
 import { getTodayUsageSummary, getRedemptionHistory, validateRedemption } from '@/lib/redemption';
 
 /**
@@ -20,10 +21,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user (only expose id, name, memberSince)
+    type PublicUser = Pick<Database['public']['Tables']['users']['Row'], 'id' | 'name' | 'created_at'>;
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('id, name, created_at')
       .eq('id', userId)
+      .returns<PublicUser>()
       .single();
 
     if (userError || !user) {
@@ -55,20 +58,21 @@ export async function GET(request: NextRequest) {
     const usageToday = await getTodayUsageSummary(userId);
     const recent = await getRedemptionHistory(userId, 5);
 
+    const u = user as unknown as PublicUser;
     return NextResponse.json({
       user: {
-        id: user.id,
-        name: user.name,
-        memberSince: user.created_at,
+        id: u.id,
+        name: u.name,
+        memberSince: u.created_at,
       },
       subscription: subscription ? {
-        id: subscription.id,
-        planId: subscription.plan_id,
-        planName: subscription.plan_name,
-        status: subscription.status,
-        currentPeriodStart: subscription.current_period_start,
-        currentPeriodEnd: subscription.current_period_end,
-        createdAt: subscription.created_at,
+        id: (subscription as any).id,
+        planId: (subscription as any).plan_id,
+        planName: (subscription as any).plan_name,
+        status: (subscription as any).status,
+        currentPeriodStart: (subscription as any).current_period_start,
+        currentPeriodEnd: (subscription as any).current_period_end,
+        createdAt: (subscription as any).created_at,
       } : null,
       limits,
       usage: {

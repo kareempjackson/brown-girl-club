@@ -4,12 +4,24 @@ import { cookies } from 'next/headers';
 import { verifyAdminToken } from '@/lib/admin-auth';
 import { supabase } from '@/lib/supabase';
 import { getTodayUsageSummary } from '@/lib/redemption';
+import type { Database } from '@/lib/supabase';
 
 const PLAN_PRICES: Record<string, number> = {
   '3-coffees': 199,
   'daily-coffee': 400,
   'creator': 950,
   'unlimited': 1500,
+};
+
+type DbSubscriptionRow = {
+  id: string;
+  user_id: string;
+  plan_id: string;
+  plan_name: string;
+  status: string;
+  current_period_start: string;
+  current_period_end: string;
+  users?: { name?: string | null; email?: string | null; phone?: string | null } | null;
 };
 
 export async function GET(_req: NextRequest) {
@@ -24,22 +36,22 @@ export async function GET(_req: NextRequest) {
     // Fetch subscriptions with user info
     const { data: subs, error } = await supabase
       .from('subscriptions')
-      .select('*, users(*)')
+      .select('*, users(name, email, phone)')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
 
-    const latestByUser = new Map<string, any>();
-    for (const s of subs || []) {
-      if (!latestByUser.has(s.user_id)) {
-        latestByUser.set(s.user_id, s);
-      }
+    const subscriptions: DbSubscriptionRow[] = ((subs as unknown) as DbSubscriptionRow[]) || [];
+
+    const latestByUser = new Map<string, DbSubscriptionRow>();
+    for (const s of subscriptions) {
+      if (!latestByUser.has(s.user_id)) latestByUser.set(s.user_id, s);
     }
 
     // Build subscriber rows and enrich usage
     const rows: any[] = [];
     for (const sub of latestByUser.values()) {
-      const user = (sub as any).users || {};
+      const user = sub.users || {};
       const planId: string = sub.plan_id;
       const price = PLAN_PRICES[planId] ?? 0;
       const statusRaw: string = sub.status || 'active';
@@ -91,16 +103,18 @@ export async function DELETE(req: NextRequest) {
 
     let targetUserId = userId as string | undefined;
     if (!targetUserId && email) {
-      const { data: user, error } = await supabase
+      type UserIdOnly = Pick<Database['public']['Tables']['users']['Row'], 'id'>;
+      const userQuery = await supabase
         .from('users')
         .select('id')
         .eq('email', String(email))
         .single();
-      if (error) throw error;
-      if (!user) {
+      if (userQuery.error) throw userQuery.error;
+      const userRow = (userQuery.data as unknown) as UserIdOnly | null;
+      if (!userRow) {
         return NextResponse.json({ ok: true, message: 'User not found, nothing to delete' }, { status: 200 });
       }
-      targetUserId = user.id as string;
+      targetUserId = String(userRow.id);
     }
 
     if (!targetUserId) {

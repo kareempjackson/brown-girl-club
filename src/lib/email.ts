@@ -32,12 +32,24 @@ export function renderEmailLayout(params: {
   const title = params.title || 'Brown Girl Club';
   const preheader = params.preheader || '';
   const baseUrl = params.baseUrl || '';
-  const logoUrl = baseUrl ? `${baseUrl}/logo/logo.png` : 'https://via.placeholder.com/120x40?text=Brown+Girl+Club';
   // Brand colors (inline for email clients)
   const espresso = '#4B2E22';
   const porcelain = '#F2E4D2';
   const ink = '#292929';
   const white = '#FFFFFF';
+
+  // Try to load brand fonts in supported email clients; gracefully fall back otherwise
+  const fontFaceCss = baseUrl
+    ? `
+        @font-face {
+          font-family: 'Mailendra';
+          src: url('${baseUrl}/fonts/mailendra-regular.otf') format('opentype');
+          font-weight: 400;
+          font-style: normal;
+          font-display: swap;
+        }
+      `
+    : '';
 
   const html = `
   <!doctype html>
@@ -47,10 +59,18 @@ export function renderEmailLayout(params: {
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>${title}</title>
       <style>
+        ${fontFaceCss}
         /* fallback fonts for email */
         body, table, td, a { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        h1, h2, h3 { font-family: 'Mailendra', Georgia, serif; letter-spacing: 0.2px; }
         img { border: 0; outline: none; text-decoration: none; display: block; }
-        .btn { background: ${espresso}; color: ${white}; padding: 12px 18px; border-radius: 8px; text-decoration: none; display: inline-block; }
+        .btn { background: ${espresso}; color: ${white}; padding: 12px 18px; border-radius: 10px; text-decoration: none; display: inline-block; font-weight: 700; }
+        .brand-title { font-family: 'Mailendra', Georgia, serif; font-weight: 700; letter-spacing: 0.2px; color: ${espresso}; }
+        .muted { color: rgba(41,41,41,0.7); }
+        .card { background: ${white}; border:1px solid rgba(41,41,41,0.12); border-radius:16px; padding:24px; }
+        .kv { margin: 0; padding: 0; list-style: none; }
+        .kv li { margin: 0 0 6px 0; }
+        .divider { height:1px; background: rgba(41,41,41,0.12); border:0; margin: 16px 0; }
       </style>
     </head>
     <body style="margin:0; padding:0; background:${porcelain}; color:${ink};">
@@ -61,11 +81,11 @@ export function renderEmailLayout(params: {
             <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;">
               <tr>
                 <td style="padding: 12px 8px;" align="left">
-                  <img src="${logoUrl}" width="140" alt="Brown Girl Club" />
+                  <span class="brand-title" style="font-size:22px; line-height:1;">Brown Girl Club</span>
                 </td>
               </tr>
               <tr>
-                <td style="background:${white}; border:1px solid rgba(41,41,41,0.12); border-radius:16px; padding:24px;">
+                <td class="card">
                   ${params.contentHtml}
                 </td>
               </tr>
@@ -107,12 +127,16 @@ export function renderInvoiceEmail(params: {
   const currency = params.currency || 'XCD';
   const amount = params.amount.toFixed(2);
   const content = `
-    <h2 style="margin:0 0 8px 0; color:#4B2E22; font-size:24px;">Your Brown Girl Club Receipt</h2>
-    <p style="margin:0 0 8px 0;">Hi ${params.name},</p>
-    <p style="margin:0 0 8px 0;">Thanks for your payment. Your ${params.planName} membership is now active.</p>
-    <p style="margin:0 0 4px 0;"><strong>Amount:</strong> ${currency} ${amount}</p>
-    <p style="margin:0 0 12px 0;"><strong>Invoice ID:</strong> ${params.invoiceId}</p>
-    <p style="margin-top:24px;font-size:12px;color:rgba(41,41,41,0.7)">Keep this email for your records.</p>
+    <h2 style="margin:0 0 10px 0; color:#4B2E22; font-size:24px;">Receipt</h2>
+    <p style="margin:0 0 10px 0;">Hi ${params.name},</p>
+    <p style="margin:0 12px 16px 0;">Thanks for your payment. Your <strong>${params.planName}</strong> membership is now active.</p>
+    <div style="margin:0 0 12px 0; padding:12px 16px; background:#F7F1E9; border:1px solid rgba(41,41,41,0.08); border-radius:12px;">
+      <ul class="kv">
+        <li><strong>Amount:</strong> ${currency} ${amount}</li>
+        <li><strong>Invoice ID:</strong> ${params.invoiceId}</li>
+      </ul>
+    </div>
+    <p class="muted" style="margin-top:16px; font-size:12px;">Keep this email for your records.</p>
   `;
   const html = renderEmailLayout({ title: 'Your Brown Girl Club Receipt', preheader: `Receipt for ${params.planName}`, contentHtml: content });
   return { subject: 'Your Brown Girl Club Receipt', html };
@@ -164,16 +188,18 @@ export function renderRedemptionReceiptEmail(params: {
     : '';
 
   const content = `
-    <h2 style="margin:0 0 8px 0; color:${espresso}; font-size:24px;">Your ${params.planName} redemption</h2>
+    <h2 style="margin:0 0 10px 0; color:${espresso}; font-size:24px;">Redemption receipt</h2>
     <p style="margin:0 0 8px 0;">Hi ${params.name},</p>
-    <p style="margin:0 0 8px 0;">We recorded your ${params.itemType} redemption:</p>
-    <ul style="margin:0 0 12px 20px;">
-      <li><strong>Item:</strong> ${params.itemName} (${params.itemType})</li>
-      <li><strong>When:</strong> ${dateStr}</li>
-      ${params.location ? `<li><strong>Location:</strong> ${params.location}</li>` : ''}
-    </ul>
+    <p style="margin:0 0 12px 0;">We recorded your ${params.itemType} redemption:</p>
+    <div style="margin:0 0 12px 0; padding:12px 16px; background:#F7F1E9; border:1px solid rgba(41,41,41,0.08); border-radius:12px;">
+      <ul class="kv">
+        <li><strong>Item:</strong> ${params.itemName} (${params.itemType})</li>
+        <li><strong>When:</strong> ${dateStr}</li>
+        ${params.location ? `<li><strong>Location:</strong> ${params.location}</li>` : ''}
+      </ul>
+    </div>
     ${remainingHtml}
-    <p style="margin:16px 0 0 0; font-size:12px; color: rgba(41,41,41,0.7);">Keep this email for your records. If anything looks off, just reply to this email.</p>
+    <p class="muted" style="margin:16px 0 0 0; font-size:12px;">Keep this email for your records. If anything looks off, just reply to this email.</p>
   `;
 
   const html = renderEmailLayout({
