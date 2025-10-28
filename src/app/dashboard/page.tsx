@@ -177,7 +177,7 @@ export default function DashboardPage() {
                         return `${rC ?? 0}/3 coffees remaining this week`;
                       }
                       if (planId === 'daily-coffee') {
-                        return `${rC ?? 0}/1 coffee remaining today`;
+                        return `${rC ?? 0}/30 coffees remaining this period`;
                       }
                       if (planId === 'creator') {
                         return `Today: ${rC ?? 0}/1 coffee, ${rF ?? 0}/1 food`;
