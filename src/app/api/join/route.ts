@@ -1,20 +1,9 @@
 export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from 'next/server';
 import { getOrCreateUser, createSubscription } from '@/lib/supabase';
+import { getPlanDisplayName, normalizePlanId } from '@/lib/plans';
 
-function getPlanDisplayName(planId: string): string {
-  const planNames: Record<string, string> = {
-    '3-coffees': 'The Chill Mode — 3 Coffees / Week',
-    'daily-coffee': 'The Daily Fix — 1 Coffee / Day',
-    'creator': 'The Double Shot Life — 2 Coffees / Day',
-    'unlimited': 'The Caffeine Royalty — 4 Coffees / Day',
-    'meal-5': '5-Day Meal Prep',
-    'meal-10': '10-Day Meal Prep',
-    'meal-15': '15-Day Meal Prep',
-    'meal-20': '20-Day Meal Prep',
-  };
-  return planNames[planId] || 'Membership';
-}
+// Plan display names centralized in lib/plans
 
 import { sendMail, renderCashPaymentReminderEmail } from '@/lib/email';
 import { getBaseUrl } from '@/lib/url';
@@ -35,10 +24,11 @@ export async function POST(request: NextRequest) {
     const periodStart = now.toISOString();
     const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
+    const normalizedPlanId = normalizePlanId(planId);
     const subscription = await createSubscription({
       userId: user.id,
-      planId,
-      planName: getPlanDisplayName(planId),
+      planId: normalizedPlanId,
+      planName: getPlanDisplayName(normalizedPlanId),
       status: 'pending_payment',
       currentPeriodStart: periodStart,
       currentPeriodEnd: periodEnd,
@@ -49,7 +39,7 @@ export async function POST(request: NextRequest) {
       const baseUrl = getBaseUrl(request.nextUrl.origin);
       const emailTpl = renderCashPaymentReminderEmail({
         name: user.name || 'Member',
-        planName: getPlanDisplayName(planId),
+        planName: getPlanDisplayName(normalizedPlanId),
         baseUrl,
       });
       await sendMail({ to: user.email, subject: emailTpl.subject, html: emailTpl.html });

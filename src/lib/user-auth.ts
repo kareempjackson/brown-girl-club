@@ -116,3 +116,50 @@ export function verifyMagicToken(token: string): MagicTokenPayload | null {
 }
 
 
+// Member invite tokens (for bundle subscriptions)
+interface MemberInvitePayload {
+  subscriptionId: string;
+  email: string;
+  name?: string;
+  type: 'member_invite';
+  exp: number;
+}
+
+export function createMemberInviteToken(params: { subscriptionId: string; email: string; name?: string }, ttlSeconds = 60 * 60 * 24): string {
+  const payload: MemberInvitePayload = {
+    subscriptionId: params.subscriptionId,
+    email: params.email,
+    name: params.name,
+    type: 'member_invite',
+    exp: Math.floor(Date.now() / 1000) + ttlSeconds,
+  };
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const headerB64 = base64UrlEncode(JSON.stringify(header));
+  const payloadB64 = base64UrlEncode(JSON.stringify(payload));
+  const toSign = `${headerB64}.${payloadB64}`;
+  const hmac = crypto.createHmac('sha256', getUserSecret()).update(toSign).digest();
+  const signatureB64 = base64UrlEncode(hmac);
+  return `${toSign}.${signatureB64}`;
+}
+
+export function verifyMemberInviteToken(token: string): MemberInvitePayload | null {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  const [headerB64, payloadB64, signatureB64] = parts;
+  const toSign = `${headerB64}.${payloadB64}`;
+  const expectedSig = base64UrlEncode(
+    crypto.createHmac('sha256', getUserSecret()).update(toSign).digest()
+  );
+  if (!crypto.timingSafeEqual(Buffer.from(signatureB64), Buffer.from(expectedSig))) return null;
+  try {
+    const payloadJson = base64UrlDecode(payloadB64).toString('utf8');
+    const payload = JSON.parse(payloadJson) as MemberInvitePayload;
+    if (payload.type !== 'member_invite') return null;
+    if (!payload.exp || payload.exp < Math.floor(Date.now() / 1000)) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+

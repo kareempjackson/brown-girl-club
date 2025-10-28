@@ -1,6 +1,6 @@
 // Redemption business logic and validation
 
-import { supabase, recordUsage as createUsage } from './supabase';
+import { supabase, recordUsage as createUsage, getActiveSubscriptionByUserId } from './supabase';
 import type { Database } from './supabase';
 
 function getTimezoneOffsetMinutes(): number {
@@ -42,18 +42,34 @@ export interface PlanLimits {
 
 // Define limits for each plan
 export const PLAN_LIMITS: Record<string, PlanLimits> = {
-  '3-coffees': {
-    coffeePerWeek: 3,
+  // Chill Mode (12/month)
+  'chill-mode': {
+    coffeePerMonth: 12,
   },
+  // Daily Fix (30/month)
   'daily-coffee': {
     coffeePerMonth: 30,
   },
+  // Double Shot bundle (60/month)
+  'double-shot': {
+    coffeePerMonth: 60,
+    coffeePerDay: 4,
+  },
+  // Caffeine Royalty bundle (120/month)
+  'caffeine-royalty': {
+    coffeePerMonth: 120,
+    coffeePerDay: 6,
+  },
+  // Legacy plans retained for compatibility
+  '3-coffees': {
+    coffeePerWeek: 3,
+  },
   'creator': {
-    coffeePerDay: 2, // bundle plan allows up to 2 coffees/day across members
+    coffeePerDay: 2,
     foodPerDay: 1,
   },
   'unlimited': {
-    coffeePerDay: 4, // rename plan later in UI; logic: 4/day across members
+    coffeePerDay: 4,
   },
 };
 
@@ -76,22 +92,11 @@ export async function validateRedemption(
   itemType: 'coffee' | 'food' | 'dessert'
 ): Promise<RedemptionValidation> {
   try {
-    // 1. Get user's active subscription
-    const { data: subscriptions, error: subError } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('status', 'active')
-      .single();
-
-    if (subError || !subscriptions) {
-      return {
-        isValid: false,
-        reason: 'No active subscription found',
-      };
+    // 1. Get user's active subscription (owner or member)
+    const subscription = await getActiveSubscriptionByUserId(userId);
+    if (!subscription) {
+      return { isValid: false, reason: 'No active subscription found' };
     }
-
-    const subscription = (subscriptions as unknown) as Database['public']['Tables']['subscriptions']['Row'];
 
     // 2. Check if subscription has expired
     const now = new Date();
@@ -390,4 +395,53 @@ export async function getTodayUsageSummary(userId: string) {
     console.error('Error fetching today summary:', error);
     return { coffees: 0, food: 0, desserts: 0, total: 0 };
   }
+}
+
+/**
+ * Get number of coffees redeemed within a subscription's current period
+ */
+export async function getCoffeeUsageInPeriod(params: {
+  subscriptionId: string;
+  periodStart: string; // ISO
+  periodEnd: string;   // ISO
+}): Promise<number> {
+  try {
+    const { data, error } = await supabase
+      .from('usage')
+      .select('id')
+      .eq('subscription_id', params.subscriptionId)
+      .eq('item_type', 'coffee')
+      .gte('redeemed_at', params.periodStart)
+      .lte('redeemed_at', params.periodEnd);
+    if (error) throw error;
+    return (data || []).length;
+  } catch (e) {
+    console.error('Error fetching period coffee usage:', e);
+    return 0;
+  }
+}
+
+/**
+ * Compute coffee allowance for a subscription over a period (base plan + add-ons)
+ */
+export async function getCoffeeAllowanceForPeriod(params: {
+  planId: string;
+  subscriptionId: string;
+  periodStart: string; // ISO
+  periodEnd: string;   // ISO
+}): Promise<number> {
+  const base = PLAN_LIMITS[params.planId]?.coffeePerMonth || 0;
+  let addonTotal = 0;
+  try {
+    const { sumSubscriptionAddonsInPeriod } = await import('./supabase');
+    addonTotal = await sumSubscriptionAddonsInPeriod({
+      subscriptionId: params.subscriptionId,
+      itemType: 'coffee',
+      periodStart: params.periodStart,
+      periodEnd: params.periodEnd,
+    });
+  } catch (_e) {
+    addonTotal = 0;
+  }
+  return base + addonTotal;
 }

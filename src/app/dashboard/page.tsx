@@ -5,13 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
-// Plan prices for display
-const PLAN_PRICES: Record<string, string> = {
-  "3-coffees": "$199",
-  "daily-coffee": "$400",
-  "creator": "$950",
-  "unlimited": "$1500",
-};
+import { PLAN_PRICES, getPlanDisplayName, isBundlePlan, normalizePlanId, getMonthlyCoffeeAllowance } from "@/lib/plans";
 
 export default function DashboardPage() {
   const searchParams = useSearchParams();
@@ -83,7 +77,9 @@ export default function DashboardPage() {
   const hasPending = !subscription && (allSubscriptions || []).some((s: any) => s.status === 'pending_payment');
 
   // Calculate usage percentage (for progress bar)
-  const usagePercentage = usage.today.total > 0 ? (usage.today.total / 30) * 100 : 0;
+  const monthlyTotal = usage?.period?.coffees ?? usage.today.total;
+  const monthlyAllowance = usage?.period?.allowance ?? (subscription ? getMonthlyCoffeeAllowance(subscription.planId) : 30);
+  const usagePercentage = monthlyTotal > 0 ? (monthlyTotal / monthlyAllowance) * 100 : 0;
 
   return (
     <div className="bg-[var(--color-porcelain)] min-h-screen py-12 lg:py-20">
@@ -152,11 +148,11 @@ export default function DashboardPage() {
               </p>
               
               <h2 className="text-serif text-3xl lg:text-4xl text-[var(--color-accent)] mb-2 leading-tight">
-                {subscription ? subscription.planName : 'No Active Plan'}
+                {subscription ? getPlanDisplayName(subscription.planId) : 'No Active Plan'}
               </h2>
               
               <p className="text-2xl text-[var(--color-ink)] mb-6">
-                {subscription ? PLAN_PRICES[subscription.planId] || '' : ''}
+                {subscription ? PLAN_PRICES[normalizePlanId(subscription.planId)] || '' : ''}
                 {subscription && (
                   <span className="text-base text-[var(--color-ink)]/60 ml-2">/ month</span>
                 )}
@@ -170,22 +166,24 @@ export default function DashboardPage() {
                   </p>
                   <p className="text-base text-[var(--color-ink)]">
                     {(() => {
-                      const planId = subscription.planId;
+                      const planId = normalizePlanId(subscription.planId);
                       const rC = limits?.remainingCoffees ?? undefined;
                       const rF = limits?.remainingFood ?? undefined;
-                      if (planId === '3-coffees') {
+                      const allowance = usage?.period?.allowance ?? 30;
+                      const used = usage?.period?.coffees ?? 0;
+                      if (['chill-mode','daily-coffee','double-shot','caffeine-royalty'].includes(planId)) {
+                        return `${Math.max(0, allowance - used)} of ${allowance} coffees remaining this period`;
+                      }
+                      if ((subscription.planId as any) === '3-coffees') {
                         return `${rC ?? 0}/3 coffees remaining this week`;
                       }
-                      if (planId === 'daily-coffee') {
-                        return `${rC ?? 0}/30 coffees remaining this period`;
-                      }
-                      if (planId === 'creator') {
+                      if ((subscription.planId as any) === 'creator') {
                         return `Today: ${rC ?? 0}/1 coffee, ${rF ?? 0}/1 food`;
                       }
-                      if (planId === 'unlimited') {
+                      if ((subscription.planId as any) === 'unlimited') {
                         return 'Unlimited access';
                       }
-                      return subscription.planName;
+                      return getPlanDisplayName(subscription.planId);
                     })()}
                   </p>
                 </div>
@@ -234,7 +232,7 @@ export default function DashboardPage() {
                     Monthly Usage
                   </p>
                   <h3 className="text-serif text-3xl text-[var(--color-accent)]">
-                    {usage.today.total} / 30
+                    {monthlyTotal} / {monthlyAllowance}
                   </h3>
                   <p className="text-sm text-[var(--color-ink)]/60 mt-1">
                     Today: {usage.today.coffees} coffee, {usage.today.food} food, {usage.today.desserts} dessert
@@ -242,7 +240,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="text-right">
                   <p className="text-4xl font-light text-[var(--color-accent)]">
-                    {30 - usage.today.total}
+                    {Math.max(0, monthlyAllowance - monthlyTotal)}
                   </p>
                   <p className="text-xs uppercase tracking-wide text-[var(--color-ink)]/60 mt-1">
                     Remaining
@@ -260,7 +258,11 @@ export default function DashboardPage() {
 
               <p className="text-sm text-[var(--color-ink)]/60 leading-relaxed">
                 {subscription ? (
-                  <>Your usage period ends on {new Date(subscription.currentPeriodEnd).toLocaleDateString()}.</>
+                  usage?.period ? (
+                    <>Your usage period ends on {new Date(usage.period.end).toLocaleDateString()}.</>
+                  ) : (
+                    <>Your usage period ends on {new Date(subscription.currentPeriodEnd).toLocaleDateString()}.</>
+                  )
                 ) : (
                   <>Activate your membership to start tracking usage.</>
                 )}
@@ -306,8 +308,38 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Right Column: Quick Actions & Billing */}
+          {/* Right Column: Quick Actions, Members & Billing */}
           <div className="space-y-8">
+            {/* Bundle Members */}
+            {subscription && isBundlePlan(subscription.planId) && (
+              <div className="bg-white rounded-2xl p-8 border border-[var(--color-ink)]/10">
+                <h3 className="text-serif text-xl text-[var(--color-accent)] mb-6">
+                  Members on your plan
+                </h3>
+                <AddMember 
+                  remainingInvites={(() => {
+                    const planId = normalizePlanId(subscription.planId);
+                    const maxSeats = planId === 'double-shot' ? 2 : 4;
+                    const currentSeats = 1 + ((userData.members || []).length || 0);
+                    return Math.max(0, maxSeats - currentSeats);
+                  })()}
+                  onSent={() => {
+                    // Refresh after sending invite
+                    fetch('/api/user/subscription').then(r => r.json()).then(setUserData).catch(() => {});
+                  }}
+                />
+                <div className="mt-6 space-y-3">
+                  {(userData.members || []).map((m: any) => (
+                    <div key={m.id || m.email} className="flex items-center justify-between p-3 rounded-xl bg-[var(--color-porcelain)]/40">
+                      <div>
+                        <p className="text-sm font-medium text-[var(--color-ink)]">{m.name || 'Member'}</p>
+                        <p className="text-xs text-[var(--color-ink)]/60">{m.email}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {/* Quick Actions */}
             <div className="bg-white rounded-2xl p-8 border border-[var(--color-ink)]/10">
               <h3 className="text-serif text-xl text-[var(--color-accent)] mb-6">
@@ -349,7 +381,7 @@ export default function DashboardPage() {
                   </button>
                 </Link>
 
-                <button 
+                {/* <button 
                   onClick={() => setShowDownloadPass(!showDownloadPass)}
                   className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-[var(--color-porcelain)]/50 transition-colors text-left group"
                 >
@@ -382,7 +414,7 @@ export default function DashboardPage() {
                       <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </button>
-                </Link>
+                </Link> */}
               </div>
             </div>
 
@@ -444,6 +476,61 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function AddMember({ remainingInvites, onSent }: { remainingInvites: number; onSent: () => void }) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [sending, setSending] = useState(false);
+  const [message, setMessage] = useState('');
+  
+  const onInvite = async () => {
+    setSending(true);
+    setMessage('');
+    try {
+      const res = await fetch('/api/user/members/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to send invite');
+      setMessage('Invite sent. Ask them to check their email.');
+      setName('');
+      setEmail('');
+      onSent();
+    } catch (e: any) {
+      setMessage(e.message || 'Error sending invite');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div>
+      <p className="text-sm text-[var(--color-ink)]/70 mb-3">Remaining invites: {remainingInvites}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <input
+          className="px-3 py-2 rounded-xl border border-[var(--color-ink)]/20"
+          placeholder="Name (optional)"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <input
+          className="px-3 py-2 rounded-xl border border-[var(--color-ink)]/20 sm:col-span-2"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+      </div>
+      <div className="mt-3">
+        <Button variant="primary" onClick={onInvite} disabled={sending || !email || remainingInvites <= 0}>
+          {sending ? 'Sending…' : 'Invite Member'}
+        </Button>
+      </div>
+      {message && <p className="text-sm text-[var(--color-ink)]/70 mt-2">{message}</p>}
     </div>
   );
 }

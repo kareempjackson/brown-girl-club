@@ -157,6 +157,33 @@ export interface Database {
           updated_at?: string;
         };
       };
+      admins: {
+        Row: {
+          id: string;
+          email: string;
+          name: string | null;
+          invited_by: string | null;
+          status: string; // active | revoked
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          name?: string | null;
+          invited_by?: string | null;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          email?: string;
+          name?: string | null;
+          invited_by?: string | null;
+          status?: string;
+          updated_at?: string;
+        };
+      };
       subscription_addons: {
         Row: {
           id: string;

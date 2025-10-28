@@ -537,9 +537,9 @@ function SubscribeSection() {
     {
       title: "5-Day Meal Prep",
       description: "Five chef-prepared meals for the week. Easy, balanced, and delicious.",
-      price: "$446 EC",
+      price: "$165 EC",
       benefits: [
-        "$89 EC per day",
+        "$33 EC per day",
         "Pause, skip or cancel at any time.",
         "Member-only perks"
       ],
@@ -550,9 +550,9 @@ function SubscribeSection() {
     {
       title: "10-Day Meal Prep",
       description: "Ten meals to cover two solid weeks of good eating.",
-      price: "$837 EC",
+      price: "$310 EC",
       benefits: [
-        "$84 EC per day",
+        "$31 EC per day",
         "Flexible scheduling",
         "Member-only perks"
       ],
@@ -563,9 +563,9 @@ function SubscribeSection() {
     {
       title: "15-Day Meal Prep",
       description: "Fifteen meals for consistent rhythm and value.",
-      price: "$1175 EC",
+      price: "$435 EC",
       benefits: [
-        "$78 EC per day",
+        "$29 EC per day",
         "Pause or skip as needed",
         "Member-only perks"
       ],
@@ -576,9 +576,9 @@ function SubscribeSection() {
     {
       title: "20-Day Meal Prep",
       description: "Twenty meals. Best for full routine coverage.",
-      price: "$1458 EC",
+      price: "$540 EC",
       benefits: [
-        "$73 EC per day",
+        "$27 EC per day",
         "Flexible scheduling",
         "Member-only perks"
       ],

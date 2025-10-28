@@ -23,14 +23,18 @@ function JoinClient() {
   useEffect(() => {
     const param = searchParams.get("plan");
     const allowed = new Set([
-      "3-coffees",
+      "chill-mode",
       "daily-coffee",
-      "creator",
-      "unlimited",
+      "double-shot",
+      "caffeine-royalty",
       "meal-5",
       "meal-10",
       "meal-15",
       "meal-20",
+      // Legacy aliases that normalize on the API
+      "3-coffees",
+      "creator",
+      "unlimited",
     ]);
     if (param && allowed.has(param) && param !== form.planId) {
       setForm((prev) => ({ ...prev, planId: param }));
@@ -95,15 +99,15 @@ function JoinClient() {
                 onChange={(e) => setForm({ ...form, planId: e.target.value })}
                 className="w-full px-4 py-3 bg-white border border-[var(--color-ink)]/15 rounded-xl text-sm text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-all"
               >
-                <option value="3-coffees">The Chill Mode — 3 Coffees / Week</option>
-                <option value="daily-coffee">The Daily Fix — 1 Coffee / Day</option>
-                <option value="creator">The Double Shot Life — 2 Coffees / Day</option>
-                <option value="unlimited">The Caffeine Royalty — 4 Coffees / Day</option>
+                <option value="chill-mode">Chill Mode — 12 Coffees / Month</option>
+                <option value="daily-coffee">Daily Fix — 30 Coffees / Month</option>
+                <option value="double-shot">Double Shot — 60 Coffees / Month</option>
+                <option value="caffeine-royalty">Caffeine Royalty — 120 Coffees / Month</option>
                 <optgroup label="Meal Prep">
-                  <option value="meal-5">5-Day Meal Prep — $446 EC ($89/day)</option>
-                  <option value="meal-10">10-Day Meal Prep — $837 EC ($84/day)</option>
-                  <option value="meal-15">15-Day Meal Prep — $1175 EC ($78/day)</option>
-                  <option value="meal-20">20-Day Meal Prep — $1458 EC ($73/day)</option>
+                  <option value="meal-5">5-Day Meal Prep — $165 EC ($33/day)</option>
+                  <option value="meal-10">10-Day Meal Prep — $310 EC ($31/day)</option>
+                  <option value="meal-15">15-Day Meal Prep — $435 EC ($29/day)</option>
+                  <option value="meal-20">20-Day Meal Prep — $540 EC ($27/day)</option>
                 </optgroup>
               </select>
             </div>

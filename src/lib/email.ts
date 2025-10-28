@@ -1,4 +1,5 @@
 import { ServerClient } from 'postmark';
+import { getBaseUrl } from '@/lib/url';
 
 const postmarkToken = process.env.POSTMARK_API as string | undefined;
 const fromEmail = (process.env.MAIL_FROM as string) || 'Brown Girl Club <no-reply@browngirlclub.com>';
@@ -131,15 +132,46 @@ export function renderCashierInviteEmail(params: { inviteUrl: string; baseUrl?: 
   return { subject: 'You are invited: Brown Girl Club Cashier', html } as const;
 }
 
+export function renderAdminInviteEmail(params: { inviteUrl: string; baseUrl?: string }) {
+  const espresso = '#4B2E22';
+  const content = `
+    <h2 style="margin:0 0 8px 0; color:${espresso}; font-size:24px;">You're invited to be an Admin</h2>
+    <p style="margin:0 0 16px 0; line-height:1.6;">You've been granted admin access to Brown Girl Club. Click below to accept and open the admin dashboard.</p>
+    <p style="margin: 12px 0 24px 0;">
+      <a class="btn" href="${params.inviteUrl}">Accept admin invite</a>
+    </p>
+    <p style="margin:0; font-size:12px; color: rgba(41,41,41,0.7);">This link expires in 1 hour. If you weren't expecting this, you can ignore this email.</p>
+  `;
+  const html = renderEmailLayout({ title: 'Admin Invitation', preheader: 'Accept your admin invite', contentHtml: content, baseUrl: params.baseUrl });
+  return { subject: 'You are invited: Brown Girl Club Admin', html } as const;
+}
+
+export function renderMemberInviteEmail(params: { inviterName: string; planName: string; inviteUrl: string; baseUrl?: string }) {
+  const espresso = '#4B2E22';
+  const content = `
+    <h2 style="margin:0 0 8px 0; color:${espresso}; font-size:24px;">You're invited to a Brown Girl Club membership</h2>
+    <p style="margin:0 0 16px 0; line-height:1.6;">${params.inviterName} added you as a member on their <strong>${params.planName}</strong> plan. Click below to accept and link your account.</p>
+    <p style="margin: 12px 0 24px 0;">
+      <a class="btn" href="${params.inviteUrl}">Accept invite</a>
+    </p>
+    <p style="margin:0; font-size:12px; color: rgba(41,41,41,0.7);">This link expires in 24 hours. If you weren't expecting this, you can ignore this email.</p>
+  `;
+  const html = renderEmailLayout({ title: 'Membership Invitation', preheader: 'Accept your Brown Girl Club invite', contentHtml: content, baseUrl: params.baseUrl });
+  return { subject: 'You’re invited to Brown Girl Club', html } as const;
+}
+
 export function renderInvoiceEmail(params: {
   name: string;
   planName: string;
   amount: number;
   currency?: string;
   invoiceId: string;
+  baseUrl?: string;
 }) {
   const currency = params.currency || 'XCD';
   const amount = params.amount.toFixed(2);
+  const baseUrl = params.baseUrl || getBaseUrl();
+  const dashboardUrl = `${baseUrl}/dashboard`;
   const content = `
     <h2 style="margin:0 0 10px 0; color:#4B2E22; font-size:24px;">Receipt</h2>
     <p style="margin:0 0 10px 0;">Hi ${params.name},</p>
@@ -150,9 +182,12 @@ export function renderInvoiceEmail(params: {
         <li><strong>Invoice ID:</strong> ${params.invoiceId}</li>
       </ul>
     </div>
+    <p style="margin: 12px 0 0 0;">
+      <a class="btn" href="${dashboardUrl}">Open dashboard</a>
+    </p>
     <p class="muted" style="margin-top:16px; font-size:12px;">Keep this email for your records.</p>
   `;
-  const html = renderEmailLayout({ title: 'Your Brown Girl Club Receipt', preheader: `Receipt for ${params.planName}`, contentHtml: content });
+  const html = renderEmailLayout({ title: 'Your Brown Girl Club Receipt', preheader: `Receipt for ${params.planName}`, contentHtml: content, baseUrl });
   return { subject: 'Your Brown Girl Club Receipt', html };
 }
 
@@ -187,6 +222,7 @@ export function renderRedemptionReceiptEmail(params: {
   location?: string;
   remainingCoffees?: number;
   remainingFood?: number;
+  baseUrl?: string;
 }) {
   const espresso = '#4B2E22';
   const dateStr = new Date(params.redeemedAt).toLocaleString();
@@ -201,6 +237,9 @@ export function renderRedemptionReceiptEmail(params: {
     ? `<p style="margin:8px 0 0 0;">${remainingParts.join(' &nbsp; • &nbsp; ')}</p>`
     : '';
 
+  const baseUrl = params.baseUrl || getBaseUrl();
+  const dashboardUrl = `${baseUrl}/dashboard`;
+
   const content = `
     <h2 style="margin:0 0 10px 0; color:${espresso}; font-size:24px;">Redemption receipt</h2>
     <p style="margin:0 0 8px 0;">Hi ${params.name},</p>
@@ -213,6 +252,9 @@ export function renderRedemptionReceiptEmail(params: {
       </ul>
     </div>
     ${remainingHtml}
+    <p style="margin: 12px 0 0 0;">
+      <a class="btn" href="${dashboardUrl}">Open dashboard</a>
+    </p>
     <p class="muted" style="margin:16px 0 0 0; font-size:12px;">Keep this email for your records. If anything looks off, just reply to this email.</p>
   `;
 
@@ -220,6 +262,7 @@ export function renderRedemptionReceiptEmail(params: {
     title: 'Your Brown Girl Club redemption',
     preheader: 'Thanks for visiting the cafe',
     contentHtml: content,
+    baseUrl,
   });
   return { subject: 'Your Brown Girl Club redemption receipt', html } as const;
 }

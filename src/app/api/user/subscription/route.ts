@@ -4,7 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { verifyUserToken } from '@/lib/user-auth';
 import { supabase } from '@/lib/supabase';
-import { getTodayUsageSummary, getRedemptionHistory, validateRedemption } from '@/lib/redemption';
+import { getTodayUsageSummary, getRedemptionHistory, validateRedemption, getCoffeeUsageInPeriod, getCoffeeAllowanceForPeriod, PLAN_LIMITS } from '@/lib/redemption';
+import { normalizePlanId, getPlanDisplayName } from '@/lib/plans';
 import type { Database } from '@/lib/supabase';
 
 /**
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
 
     if (invError) throw invError;
 
-    // Get usage summary
+    // Usage summaries
     const usageSummary = await getTodayUsageSummary(user.id);
 
     // Get recent redemptions
@@ -97,6 +98,25 @@ export async function GET(request: NextRequest) {
       try {
         const coffeeValidation = await validateRedemption(user.id, 'coffee');
         const foodValidation = await validateRedemption(user.id, 'food');
+        // Monthly usage across period (for all monthly plans; support legacy IDs by normalizing)
+        let coffeesThisPeriod: number | undefined = undefined;
+        let coffeeAllowance: number | undefined = undefined;
+        const normalizedPlanId = normalizePlanId(activeSubscription.plan_id);
+        const hasMonthly = PLAN_LIMITS[normalizedPlanId as keyof typeof PLAN_LIMITS]?.coffeePerMonth;
+        if (hasMonthly) {
+          coffeesThisPeriod = await getCoffeeUsageInPeriod({
+            subscriptionId: activeSubscription.id,
+            periodStart: activeSubscription.current_period_start,
+            periodEnd: activeSubscription.current_period_end,
+          });
+          coffeeAllowance = await getCoffeeAllowanceForPeriod({
+            planId: normalizedPlanId,
+            subscriptionId: activeSubscription.id,
+            periodStart: activeSubscription.current_period_start,
+            periodEnd: activeSubscription.current_period_end,
+          });
+        }
+
         limits = {
           remainingCoffees: coffeeValidation.remainingCoffees,
           remainingFood: foodValidation.remainingFood,
@@ -105,6 +125,8 @@ export async function GET(request: NextRequest) {
             start: coffeeValidation.subscription.current_period_start,
             end: coffeeValidation.subscription.current_period_end,
           },
+          periodCoffeeUsage: coffeesThisPeriod,
+          periodCoffeeAllowance: coffeeAllowance,
         };
       } catch (e) {
         // swallow limits errors to not break dashboard
@@ -122,8 +144,8 @@ export async function GET(request: NextRequest) {
       },
       subscription: activeSubscription ? {
         id: activeSubscription.id,
-        planId: activeSubscription.plan_id,
-        planName: activeSubscription.plan_name,
+        planId: normalizePlanId(activeSubscription.plan_id),
+        planName: getPlanDisplayName(activeSubscription.plan_id),
         status: activeSubscription.status,
         currentPeriodStart: activeSubscription.current_period_start,
         currentPeriodEnd: activeSubscription.current_period_end,
@@ -141,7 +163,24 @@ export async function GET(request: NextRequest) {
           location: r.location,
           redeemedAt: r.redeemed_at,
         })),
+        period: activeSubscription ? {
+          coffees: limits?.periodCoffeeUsage ?? 0,
+          allowance: limits?.periodCoffeeAllowance ?? PLAN_LIMITS[normalizePlanId(activeSubscription.plan_id) as keyof typeof PLAN_LIMITS]?.coffeePerMonth ?? 30,
+          remaining: Math.max(0, (limits?.periodCoffeeAllowance ?? PLAN_LIMITS[normalizePlanId(activeSubscription.plan_id) as keyof typeof PLAN_LIMITS]?.coffeePerMonth ?? 30) - (limits?.periodCoffeeUsage ?? 0)),
+          start: activeSubscription.current_period_start,
+          end: activeSubscription.current_period_end,
+        } : undefined,
       },
+      members: await (async () => {
+        if (!activeSubscription) return [];
+        const { data, error } = await supabase
+          .from('subscription_members')
+          .select('*, users:member_user_id(id, name, email)')
+          .eq('subscription_id', activeSubscription.id);
+        if (error) return [];
+        const rows = (data as any[]) || [];
+        return rows.map(r => ({ id: r.id, userId: r.users?.id, name: r.users?.name, email: r.users?.email }));
+      })(),
       invoices: (invoices || []).map((inv: any) => ({
         id: inv.id,
         amount: parseFloat(inv.amount),

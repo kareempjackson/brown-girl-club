@@ -4,13 +4,14 @@ import { cookies } from 'next/headers';
 import { verifyAdminToken } from '@/lib/admin-auth';
 import { supabase, addSubscriptionAddon } from '@/lib/supabase';
 import { getTodayUsageSummary } from '@/lib/redemption';
+import { normalizePlanId, getPlanDisplayName } from '@/lib/plans';
 import type { Database } from '@/lib/supabase';
 
 const PLAN_PRICES: Record<string, number> = {
-  '3-coffees': 199,
+  'chill-mode': 199,
   'daily-coffee': 400,
-  'creator': 950,
-  'unlimited': 1500,
+  'double-shot': 950,
+  'caffeine-royalty': 1500,
 };
 
 type DbSubscriptionRow = {
@@ -52,12 +53,27 @@ export async function GET(_req: NextRequest) {
     const rows: any[] = [];
     for (const sub of latestByUser.values()) {
       const user = sub.users || {};
-      const planId: string = sub.plan_id;
+      const planId: string = normalizePlanId(sub.plan_id);
       const price = PLAN_PRICES[planId] ?? 0;
       const statusRaw: string = sub.status || 'active';
       const status = statusRaw === 'pending_payment' ? 'unpaid' : statusRaw;
       const usageToday = await getTodayUsageSummary(sub.user_id);
-      const usageTotal = planId === 'unlimited' ? 999 : 30;
+      const usageTotal = 30;
+
+      // Fetch connected members for bundled plans
+      let members: Array<{ id: string; userId: string; name: string; email: string }> = [];
+      if (planId === 'double-shot' || planId === 'caffeine-royalty') {
+        const { data: memberData } = await supabase
+          .from('subscription_members')
+          .select('id, member_user_id, users:member_user_id(name, email)')
+          .eq('subscription_id', sub.id);
+        members = ((memberData as any[]) || []).map(m => ({
+          id: m.id,
+          userId: m.member_user_id,
+          name: m.users?.name || 'Member',
+          email: m.users?.email || '',
+        }));
+      }
 
       rows.push({
         id: sub.id,
@@ -66,7 +82,7 @@ export async function GET(_req: NextRequest) {
         email: user.email || '',
         phone: user.phone || '',
         plan: planId,
-        planName: sub.plan_name,
+        planName: getPlanDisplayName(planId),
         status,
         mrr: status === 'active' ? price : 0,
         nextBillingDate: sub.current_period_end,
@@ -74,6 +90,7 @@ export async function GET(_req: NextRequest) {
         usageCurrent: usageToday.total || 0,
         usageTotal,
         notes: '',
+        members,
       });
     }
 

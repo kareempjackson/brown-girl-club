@@ -1,3 +1,4 @@
+import { useState, Fragment } from "react";
 import { Badge } from "@/components/ui/badge";
 import type { Subscriber } from "@/app/admin/(protected)/DashboardPage";
 
@@ -18,6 +19,8 @@ export function SubscriberTable({
   onEdit,
   onDelete
 }: SubscriberTableProps) {
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const toggle = (id: string) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
   const SortIcon = ({ field }: { field: keyof Subscriber }) => {
     if (sortField !== field) {
       return (
@@ -196,16 +199,23 @@ export function SubscriberTable({
           </thead>
           <tbody>
             {subscribers.map((subscriber, index) => (
+              <Fragment key={subscriber.id}>
               <tr
-                key={subscriber.id}
                 className={`border-b border-[var(--color-ink)]/5 hover:bg-[var(--color-porcelain)]/30 transition-colors ${
-                  index === subscribers.length - 1 ? "border-0" : ""
+                  index === subscribers.length - 1 && !(expanded[subscriber.id] && subscriber.members?.length) ? "border-0" : ""
                 }`}
               >
                 <td className="py-4 px-3">
-                  <p className="text-sm font-medium text-[var(--color-ink)]">
-                    {subscriber.name}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    {subscriber.members?.length ? (
+                      <button onClick={() => toggle(subscriber.id)} className="p-1 rounded hover:bg-[var(--color-porcelain)]" aria-label="Toggle members">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={`transition-transform ${expanded[subscriber.id] ? 'rotate-90' : ''}`}>
+                          <path d="M8 5L16 12L8 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                    ) : null}
+                    <p className="text-sm font-medium text-[var(--color-ink)]">{subscriber.name}</p>
+                  </div>
                 </td>
                 <td className="py-4 px-3">
                   <p className="text-sm text-[var(--color-ink)]/70">{subscriber.email}</p>
@@ -298,6 +308,24 @@ export function SubscriberTable({
                   </div>
                 </td>
               </tr>
+              {expanded[subscriber.id] && subscriber.members?.length ? (
+                <tr key={`${subscriber.id}-members`} className={`${index === subscribers.length - 1 ? 'border-0' : 'border-b border-[var(--color-ink)]/5'}`}>
+                  <td colSpan={8} className="py-3 px-3 bg-[var(--color-porcelain)]/30">
+                    <div className="space-y-2">
+                      {subscriber.members.map(m => (
+                        <div key={m.id} className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-[var(--color-ink)]">{m.name}</p>
+                            <p className="text-xs text-[var(--color-ink)]/60">{m.email}</p>
+                          </div>
+                          <span className="text-xs uppercase tracking-wide text-[var(--color-ink)]/60">Connected account</span>
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              ) : null}
+              </Fragment>
             ))}
           </tbody>
         </table>
@@ -358,6 +386,30 @@ export function SubscriberTable({
                 </p>
               </div>
             </div>
+
+            {subscriber.members?.length ? (
+              <div className="mt-3">
+                <button
+                  onClick={() => toggle(subscriber.id)}
+                  className="text-sm font-bold text-[var(--color-accent)] uppercase tracking-wide"
+                >
+                  {expanded[subscriber.id] ? 'Hide connected accounts' : 'Show connected accounts'}
+                </button>
+                {expanded[subscriber.id] && (
+                  <div className="mt-3 space-y-2">
+                    {subscriber.members.map(m => (
+                      <div key={m.id} className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-[var(--color-ink)]">{m.name}</p>
+                          <p className="text-xs text-[var(--color-ink)]/60">{m.email}</p>
+                        </div>
+                        <span className="text-xs uppercase tracking-wide text-[var(--color-ink)]/60">Connected</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : null}
 
             <div className="flex gap-2 pt-4 border-t border-[var(--color-ink)]/10">
               <button

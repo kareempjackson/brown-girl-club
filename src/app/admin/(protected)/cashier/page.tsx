@@ -60,18 +60,55 @@ export default function CashierPage() {
     })();
   }, []);
 
+  const [dynamicMatch, setDynamicMatch] = useState<Subscriber | null>(null);
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [] as Subscriber[];
-    return (subscribers || []).filter(
+    const base = (subscribers || []).filter(
       s => s.email.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)
     ).slice(0, 8);
-  }, [query, subscribers]);
+    if (dynamicMatch && (dynamicMatch.email.toLowerCase().includes(q))) {
+      // put dynamic email first if not already in list
+      const exists = base.some(s => s.email.toLowerCase() === dynamicMatch.email.toLowerCase());
+      return exists ? base : [dynamicMatch, ...base];
+    }
+    return base;
+  }, [query, subscribers, dynamicMatch]);
 
   const selected = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return null as Subscriber | null;
     return (subscribers || []).find(s => s.email.toLowerCase() === q) || null;
+  }, [query, subscribers]);
+
+  // Live lookup by email if not in subscribers
+  useEffect(() => {
+    const q = query.trim();
+    if (!q || !q.includes('@')) { setDynamicMatch(null); return; }
+    const inList = (subscribers || []).some(s => s.email.toLowerCase() === q.toLowerCase());
+    if (inList) { setDynamicMatch(null); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/validate?email=${encodeURIComponent(q)}`, { cache: 'no-store' });
+        const data = await res.json();
+        if (!res.ok) { setDynamicMatch(null); return; }
+        const sub: Subscriber = {
+          id: data.subscription.id,
+          userId: data.subscription.userId,
+          name: data.subscription.planName,
+          email: q,
+          phone: '',
+          plan: 'daily-coffee',
+          planName: data.subscription.planName,
+          status: (data.subscription.status === 'pending_payment' ? 'unpaid' : data.subscription.status) as any,
+        };
+        if (!cancelled) setDynamicMatch(sub);
+      } catch {
+        if (!cancelled) setDynamicMatch(null);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [query, subscribers]);
 
   // Load selected user's profile
