@@ -46,6 +46,10 @@ export async function POST(request: NextRequest) {
       limits: {
         remainingCoffees: validation.remainingCoffees,
         remainingFood: validation.remainingFood,
+        period: {
+          start: validation.subscription.current_period_start,
+          end: validation.subscription.current_period_end,
+        },
       },
       usageToday: validation.usageToday || [],
     });

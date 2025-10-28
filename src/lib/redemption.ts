@@ -35,6 +35,7 @@ function getStartOfWeekUtcDate(now: Date = new Date()): Date {
 export interface PlanLimits {
   coffeePerDay?: number;
   coffeePerWeek?: number;
+  coffeePerMonth?: number;
   foodPerDay?: number;
   unlimited?: boolean;
 }
@@ -45,7 +46,7 @@ export const PLAN_LIMITS: Record<string, PlanLimits> = {
     coffeePerWeek: 3,
   },
   'daily-coffee': {
-    coffeePerDay: 1,
+    coffeePerMonth: 30,
   },
   'creator': {
     coffeePerDay: 2, // bundle plan allows up to 2 coffees/day across members
@@ -162,6 +163,65 @@ export async function validateRedemption(
         subscription,
         usageToday,
         remainingFood: limits.foodPerDay - foodToday,
+      };
+    }
+
+    // 7. Check monthly coffee limit (for daily-coffee -> 30/month plus add-ons)
+    if (itemType === 'coffee' && limits.coffeePerMonth) {
+      const periodStart = new Date(subscription.current_period_start);
+      const periodEnd = new Date(subscription.current_period_end);
+
+      const { data: monthRows, error: monthErr } = await supabase
+        .from('usage')
+        .select('*')
+        .eq('subscription_id', subscription.id)
+        .eq('item_type', 'coffee')
+        .gte('redeemed_at', periodStart.toISOString())
+        .lte('redeemed_at', periodEnd.toISOString());
+      if (monthErr) {
+        console.error('Error fetching monthly usage:', monthErr);
+        return {
+          isValid: false,
+          reason: 'Error checking usage',
+          subscription,
+        };
+      }
+      const monthUsage = (monthRows || []) as Database['public']['Tables']['usage']['Row'][];
+      const coffeesThisPeriod = monthUsage.length || 0;
+
+      // Sum add-ons for this period
+      let addonTotal = 0;
+      try {
+        // Lazy import to avoid circular import issues
+        const { sumSubscriptionAddonsInPeriod } = await import('./supabase');
+        addonTotal = await sumSubscriptionAddonsInPeriod({
+          subscriptionId: subscription.id,
+          itemType: 'coffee',
+          periodStart: periodStart.toISOString(),
+          periodEnd: periodEnd.toISOString(),
+        });
+      } catch (e) {
+        addonTotal = 0;
+      }
+
+      const allowance = (limits.coffeePerMonth || 0) + addonTotal;
+      if (coffeesThisPeriod >= allowance) {
+        return {
+          isValid: false,
+          reason: `Monthly coffee limit reached (${allowance})`,
+          subscription,
+          remainingCoffees: 0,
+        };
+      }
+
+      // Still compute a notice if many today
+      const coffeesToday = usageToday?.filter((u) => u.item_type === 'coffee').length || 0;
+      return {
+        isValid: true,
+        subscription,
+        remainingCoffees: Math.max(0, allowance - coffeesThisPeriod),
+        usageToday,
+        needsNotice: coffeesToday >= 5,
       };
     }
 

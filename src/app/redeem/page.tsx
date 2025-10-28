@@ -82,6 +82,7 @@ function RedeemClient() {
   const [selectedItemType, setSelectedItemType] = useState<'coffee' | 'food' | 'dessert'>('coffee');
   const [selectedItem, setSelectedItem] = useState('');
   const [location, setLocation] = useState('Main Location');
+  const [quantity, setQuantity] = useState<number>(1);
 
   useEffect(() => {
     if (code) {
@@ -134,6 +135,7 @@ function RedeemClient() {
           itemType: selectedItemType,
           itemName: selectedItem,
           location,
+          quantity,
         }),
       });
 
@@ -143,8 +145,9 @@ function RedeemClient() {
         throw new Error(data.error || 'Redemption failed');
       }
 
-      setSuccess(`✅ ${selectedItem} redeemed successfully!`);
+      setSuccess(`✅ ${selectedItem} x${quantity} redeemed successfully!`);
       setSelectedItem('');
+      setQuantity(1);
       
       // Refresh subscription info
       await fetchSubscriptionInfo();
@@ -166,7 +169,7 @@ function RedeemClient() {
       case '3-coffees':
         return `${limits.remainingCoffees || 0}/3 coffees remaining this week`;
       case 'daily-coffee':
-        return `${limits.remainingCoffees || 0}/1 coffee remaining today`;
+        return `${limits.remainingCoffees || 0}/30 coffees remaining this period`;
       case 'creator':
         return `Today: ${limits.remainingCoffees || 0}/1 coffee, ${limits.remainingFood || 0}/1 food`;
       case 'unlimited':
@@ -377,6 +380,25 @@ function RedeemClient() {
               </label>
             ))}
           </div>
+
+          {/* Quantity and Location Inputs */}
+          {selectedItemType === 'coffee' && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Quantity
+              </label>
+              <input
+                type="number"
+                min={1}
+                value={quantity}
+                onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              {typeof limits?.remainingCoffees === 'number' && (
+                <p className="text-xs text-gray-500 mt-1">Up to {limits.remainingCoffees} remaining this period</p>
+              )}
+            </div>
+          )}
 
           {/* Location Input */}
           <div className="mb-6">

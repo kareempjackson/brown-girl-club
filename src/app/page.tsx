@@ -47,6 +47,24 @@ export default function HomePage() {
     'https://eouiynfsgaiavzvlfwpa.supabase.co/storage/v1/object/public/club_img/collage/Photo%20Oct%2007%202025,%2011%2003%2017%20AM.jpg'
   ];
 
+  // Only render images that successfully load to avoid empty frames
+  const [validCollageImages, setValidCollageImages] = useState<string[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const verify = (src: string) => new Promise<string | null>((resolve) => {
+      const img = new window.Image();
+      img.onload = () => resolve(src);
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+    Promise.all(collageImages.map(verify)).then(results => {
+      if (!isMounted) return;
+      setValidCollageImages(results.filter((r): r is string => Boolean(r)));
+    });
+    return () => { isMounted = false; };
+  }, []);
+
   // Up to 14 collage positions; we will only render as many as we have images (no repeats)
   const collagePositions = [
     { pos: 'top-[5%] left-[10%]', rot: '-rotate-6', z: 1 },
@@ -204,16 +222,16 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 overflow-visible">
           {/* Mobile: Simple grid view using local images */}
           <div className="grid grid-cols-2 gap-4 md:hidden">
-            {collageImages.slice(0, 14).map((src, idx) => (
+            {validCollageImages.slice(0, 14).map((src, idx) => (
               <Polaroid key={idx} image={src} caption="" rotate="" zIndex={1} />
             ))}
           </div>
           {/* Tablet and Desktop: Collage view with local images */}
           <div className="relative h-[500px] sm:h-[600px] lg:h-[700px] items-center justify-center overflow-visible hidden md:flex">
-            {collagePositions.slice(0, Math.min(collageImages.length, 14)).map((conf, idx) => (
+            {collagePositions.slice(0, Math.min(validCollageImages.length, 14)).map((conf, idx) => (
               <div key={idx} className={`absolute ${conf.pos}`}>
             <Polaroid
-                  image={collageImages[idx]}
+                  image={validCollageImages[idx]}
                   caption=""
                   rotate={conf.rot}
                   zIndex={conf.z}
@@ -442,6 +460,7 @@ function FeatureBandSection() {
 
 function SubscribeSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [selectedCategory, setSelectedCategory] = useState<'coffee' | 'meal'>('coffee');
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -453,6 +472,123 @@ function SubscribeSection() {
     }
   };
 
+  // Define plans for both categories and switch based on selection
+  const coffeePlans = [
+    {
+      title: "The Chill Mode",
+      description: "Take it slow, sip it right. For the ones who live for good vibes and lazy mornings. Three coffees a week to keep life flavorful, not frantic.",
+      price: "$74 USD ($199 EC)",
+      savings: "save $65",
+      benefits: [
+        "Food specials & discounts",
+        "Pause, skip or cancel at any time.",
+        "Member-only perks"
+      ],
+      buttonText: "SUBSCRIBE NOW",
+      bgColor: "#E7D4AF",
+      onButtonClick: () => window.location.href = '/join?plan=3-coffees',
+    },
+    {
+      title: "The Daily Fix",
+      description: "Your everyday dose of happy. One coffee a day to keep your mood lifted and your hustle smooth. No day starts without it.",
+      price: "$148 USD ($400 EC)",
+      savings: "save $216",
+      benefits: [
+        "1 coffee per day",
+        "20% off food items",
+        "1 free dessert per week"
+      ],
+      buttonText: "SUBSCRIBE NOW",
+      bgColor: "#F6EBDD",
+      onButtonClick: () => window.location.href = '/join?plan=daily-coffee',
+    },
+    {
+      title: "The Double Shot Life",
+      description: "Twice the coffee, twice the vibe. Morning grind, afternoon unwind. For the movers, shakers, and dream chasers who need that extra boost.",
+      price: "$352 USD ($950 EC)",
+      savings: "save $282",
+      benefits: [
+        "Up to 2 coffees per day (shared)",
+        "20% off food items",
+        "1 free lunch per week"
+      ],
+      buttonText: "SUBSCRIBE NOW",
+      bgColor: "#E7C1AC",
+      onButtonClick: () => window.location.href = '/join?plan=creator',
+    },
+    {
+      title: "The Caffeine Royalty",
+      description: "All day. Every day. Own it. Four cups a day — bold, unapologetic, and absolutely on brand for the coffee-obsessed. You don't just drink coffee; you reign with it.",
+      price: "$556 USD ($1500 EC)",
+      benefits: [
+        "Up to 4 coffees per day (shared)",
+        "20% off food items",
+        "Choice: 1 free breakfast or 1 free lunch per week"
+      ],
+      buttonText: "SUBSCRIBE NOW",
+      bgColor: "#5B3A2F",
+      isDark: true,
+      onButtonClick: () => window.location.href = '/join?plan=unlimited',
+    },
+  ] as const;
+
+  const mealPlans = [
+    {
+      title: "5-Day Meal Prep",
+      description: "Five chef-prepared meals for the week. Easy, balanced, and delicious.",
+      price: "$446 EC",
+      benefits: [
+        "$89 EC per day",
+        "Pause, skip or cancel at any time.",
+        "Member-only perks"
+      ],
+      buttonText: "SUBSCRIBE NOW",
+      bgColor: "#D7E8D4",
+      onButtonClick: () => window.location.href = '/join?plan=meal-5',
+    },
+    {
+      title: "10-Day Meal Prep",
+      description: "Ten meals to cover two solid weeks of good eating.",
+      price: "$837 EC",
+      benefits: [
+        "$84 EC per day",
+        "Flexible scheduling",
+        "Member-only perks"
+      ],
+      buttonText: "SUBSCRIBE NOW",
+      bgColor: "#E0F3F1",
+      onButtonClick: () => window.location.href = '/join?plan=meal-10',
+    },
+    {
+      title: "15-Day Meal Prep",
+      description: "Fifteen meals for consistent rhythm and value.",
+      price: "$1175 EC",
+      benefits: [
+        "$78 EC per day",
+        "Pause or skip as needed",
+        "Member-only perks"
+      ],
+      buttonText: "SUBSCRIBE NOW",
+      bgColor: "#F3E3F1",
+      onButtonClick: () => window.location.href = '/join?plan=meal-15',
+    },
+    {
+      title: "20-Day Meal Prep",
+      description: "Twenty meals. Best for full routine coverage.",
+      price: "$1458 EC",
+      benefits: [
+        "$73 EC per day",
+        "Flexible scheduling",
+        "Member-only perks"
+      ],
+      buttonText: "SUBSCRIBE NOW",
+      bgColor: "#D4E1F7",
+      onButtonClick: () => window.location.href = '/join?plan=meal-20',
+    },
+  ] as const;
+
+  const plansToRender = selectedCategory === 'coffee' ? coffeePlans : mealPlans;
+
   return (
     <section id="subscribe" className="py-12 sm:py-14 md:py-16 lg:py-24 bg-[var(--color-porcelain)] relative overflow-hidden">
       {/* Watermark - Nutmeg (top left) */}
@@ -463,14 +599,34 @@ function SubscribeSection() {
         aria-hidden="true"
       />
       <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
-        {/* Intro */}
-        <div className="mb-8 sm:mb-10 md:mb-12">
-          <h2 className="text-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[var(--color-accent)] leading-[1.1] mb-4 sm:mb-6">
-            Subscribe<br />Today & Save
-          </h2>
-          <p className="text-sm sm:text-base lg:text-lg text-[var(--color-ink)]/70 leading-relaxed max-w-lg">
-            Subscribe for a never‑ending cup and member perks. Calm, effortless, good value.
-          </p>
+        {/* Intro + Toggle */}
+        <div className="mb-8 sm:mb-10 md:mb-12 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+          <div>
+            <h2 className="text-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[var(--color-accent)] leading-[1.1] mb-4 sm:mb-6">
+              Subscribe<br />Today & Save
+            </h2>
+            <p className="text-sm sm:text-base lg:text-lg text-[var(--color-ink)]/70 leading-relaxed max-w-lg">
+              Subscribe for a never‑ending cup and member perks. Calm, effortless, good value.
+            </p>
+          </div>
+          <div className="md:mb-1">
+            <div className="inline-flex items-center bg-white border border-[var(--color-accent)]/20 rounded-full p-1">
+              <button
+                onClick={() => setSelectedCategory('coffee')}
+                className={`${selectedCategory === 'coffee' ? 'bg-[var(--color-accent)] text-white' : 'text-[var(--color-accent)]'} px-4 py-2 rounded-full text-sm font-semibold transition-colors`}
+                aria-pressed={selectedCategory === 'coffee'}
+              >
+                Coffee
+              </button>
+              <button
+                onClick={() => setSelectedCategory('meal')}
+                className={`${selectedCategory === 'meal' ? 'bg-[var(--color-accent)] text-white' : 'text-[var(--color-accent)]'} px-4 py-2 rounded-full text-sm font-semibold transition-colors`}
+                aria-pressed={selectedCategory === 'meal'}
+              >
+                Meal Prep
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Horizontal Scroll Cards with Navigation */}
@@ -487,62 +643,20 @@ function SubscribeSection() {
               }}
             >
               <div className="flex gap-4 px-5">
-                <CleanSubscriptionCard
-                  title="3 coffees / week"
-                  description="Perfect for the casual coffee lover. Enjoy your favorite brew three times a week with special food discounts."
-                  price="$74 USD ($199 EC)"
-                  savings="save $65"
-                  benefits={[
-                    "Food specials & discounts",
-                    "Pause, skip or cancel at any time.",
-                    "Member-only perks"
-                  ]}
-                  buttonText="SUBSCRIBE NOW"
-                  bgColor="#E7D4AF"
-                  onButtonClick={() => window.location.href = '/join?plan=3-coffees'}
-                />
-                <CleanSubscriptionCard
-                  title="Daily coffee"
-                  description="Start every day right. One daily coffee plus exclusive food benefits and a weekly treat."
-                  price="$148 USD ($400 EC)"
-                  savings="save $216"
-                  benefits={[
-                    "1 coffee per day",
-                    "20% off food items",
-                    "1 free dessert per week"
-                  ]}
-                  buttonText="SUBSCRIBE NOW"
-                  bgColor="#F6EBDD"
-                  onButtonClick={() => window.location.href = '/join?plan=daily-coffee'}
-                />
-                <CleanSubscriptionCard
-                  title="Creator+ (Bundle & Save)"
-                  description="Built for creators and doers. Share with your team or friends. Up to 2 coffees per day across the account."
-                  price="$352 USD ($950 EC)"
-                  savings="save $282"
-                  benefits={[
-                    "Up to 2 coffees per day (shared)",
-                    "20% off food items",
-                    "1 free lunch per week"
-                  ]}
-                  buttonText="SUBSCRIBE NOW"
-                  bgColor="#E7C1AC"
-                  onButtonClick={() => window.location.href = '/join?plan=creator'}
-                />
-                <CleanSubscriptionCard
-                  title="House 4/day (Bundle & Save)"
-                  description="The ultimate membership for households. Share with family or friends. Up to 4 coffees per day across the account."
-                  price="$556 USD ($1500 EC)"
-                  benefits={[
-                    "Up to 4 coffees per day (shared)",
-                    "20% off food items",
-                    "Choice: 1 free breakfast or 1 free lunch per week"
-                  ]}
-                  buttonText="SUBSCRIBE NOW"
-                  bgColor="#5B3A2F"
-                  isDark={true}
-                  onButtonClick={() => window.location.href = '/join?plan=unlimited'}
-                />
+                {plansToRender.map((plan, idx) => (
+                  <CleanSubscriptionCard
+                    key={`mobile-${selectedCategory}-${idx}`}
+                    title={plan.title}
+                    description={plan.description}
+                    price={plan.price}
+                    savings={(plan as any).savings}
+                    benefits={plan.benefits as any}
+                    buttonText={plan.buttonText}
+                    bgColor={plan.bgColor}
+                    isDark={(plan as any).isDark}
+                    onButtonClick={plan.onButtonClick}
+                  />
+                ))}
               </div>
             </div>
             {/* Scroll indicator gradient - right edge */}
@@ -576,63 +690,21 @@ function SubscribeSection() {
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               <div className="flex gap-4 sm:gap-5 md:gap-6 min-w-max">
-              <CleanSubscriptionCard
-                title="3 coffees / week"
-                description="Perfect for the casual coffee lover. Enjoy your favorite brew three times a week with special food discounts."
-                price="$74 USD ($199 EC)"
-                savings="save $65"
-                benefits={[
-                  "Food specials & discounts",
-                  "Pause, skip or cancel at any time.",
-                  "Member-only perks"
-                ]}
-                buttonText="SUBSCRIBE NOW"
-                bgColor="#E7D4AF"
-                onButtonClick={() => window.location.href = '/join?plan=3-coffees'}
-              />
-              <CleanSubscriptionCard
-                title="Daily coffee"
-                description="Start every day right. One daily coffee plus exclusive food benefits and a weekly treat."
-                price="$148 USD ($400 EC)"
-                savings="save $216"
-                benefits={[
-                  "1 coffee per day",
-                  "20% off food items",
-                  "1 free dessert per week"
-                ]}
-                buttonText="SUBSCRIBE NOW"
-                bgColor="#F6EBDD"
-                onButtonClick={() => window.location.href = '/join?plan=daily-coffee'}
-              />
-              <CleanSubscriptionCard
-                title="Creator+ (Bundle & Save)"
-                description="Built for creators and doers. Share with your team or friends. Up to 2 coffees per day across the account."
-                price="$352 USD ($950 EC)"
-                savings="save $282"
-                benefits={[
-                  "Up to 2 coffees per day (shared)",
-                  "20% off food items",
-                  "1 free lunch per week"
-                ]}
-                buttonText="SUBSCRIBE NOW"
-                bgColor="#E7C1AC"
-                onButtonClick={() => window.location.href = '/join?plan=creator'}
-              />
-              <CleanSubscriptionCard
-                title="House 4/day (Bundle & Save)"
-                description="The ultimate membership for households. Share with family or friends. Up to 4 coffees per day across the account."
-                price="$556 USD ($1500 EC)"
-                benefits={[
-                  "Up to 4 coffees per day (shared)",
-                  "20% off food items",
-                  "Choice: 1 free breakfast or 1 free lunch per week"
-                ]}
-                buttonText="SUBSCRIBE NOW"
-                bgColor="#5B3A2F"
-                isDark={true}
-                onButtonClick={() => window.location.href = '/join?plan=unlimited'}
-              />
-            </div>
+                {plansToRender.map((plan, idx) => (
+                  <CleanSubscriptionCard
+                    key={`desktop-${selectedCategory}-${idx}`}
+                    title={plan.title}
+                    description={plan.description}
+                    price={plan.price}
+                    savings={(plan as any).savings}
+                    benefits={plan.benefits as any}
+                    buttonText={plan.buttonText}
+                    bgColor={plan.bgColor}
+                    isDark={(plan as any).isDark}
+                    onButtonClick={plan.onButtonClick}
+                  />
+                ))}
+              </div>
           </div>
 
             {/* Right Arrow */}
@@ -948,6 +1020,18 @@ function Polaroid({
   rotate?: string;
   zIndex?: number;
 }) {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const img = new window.Image();
+    img.onload = () => { if (isMounted) setIsLoaded(true); };
+    img.onerror = () => { if (isMounted) setIsLoaded(false); };
+    img.src = image;
+    return () => { isMounted = false; };
+  }, [image]);
+
+  if (!isLoaded) return null;
   return (
     <figure 
       className={`relative bg-white p-2.5 sm:p-3 md:p-4 border border-[var(--color-ink)]/10 rounded-sm transition-transform duration-200 ease-out cursor-pointer hover:scale-110 sm:hover:scale-[1.4] hover:rotate-0 hover:!z-[1000] will-change-transform ${rotate ?? ''}`}
@@ -955,7 +1039,13 @@ function Polaroid({
         zIndex: zIndex ?? 1,
       }}
     >
-      <div className="w-full aspect-[4/5] sm:w-[160px] sm:h-[200px] md:w-[200px] md:h-[240px] overflow-hidden bg-center bg-cover" style={{ backgroundImage: `url("${encodeURI(image)}")` }} />
+      <img
+        src={image}
+        alt=""
+        className="w-full aspect-[4/5] sm:w-[160px] sm:h-[200px] md:w-[200px] md:h-[240px] object-cover object-center block"
+        loading="eager"
+        decoding="async"
+      />
       <figcaption className="text-[9px] sm:text-[10px] md:text-xs text-[var(--color-ink)]/70 mt-1.5 sm:mt-2 text-center">
         {caption}
       </figcaption>

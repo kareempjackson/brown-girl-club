@@ -1,15 +1,34 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Header } from "@/components/Header";
+import { getBaseUrl } from "@/lib/url";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Brown Girl Club — Membership for daily ritual",
-  description: "Editorial, warm, modern. Your daily ritual, made simple.",
+  metadataBase: new URL(getBaseUrl()),
+  title: "Brown Girl Club | Membership for daily ritual",
+  description: "Daily coffee, real connection, and small luxuries that make big days softer.",
   icons: {
     icon: [{ url: "/icon.svg" }],
     shortcut: [{ url: "/icon.svg" }],
     apple: [{ url: "/icon.svg" }],
+  },
+  openGraph: {
+    title: "Brown Girl Club | Membership for daily ritual",
+    description: "Daily coffee, real connection, and small luxuries that make big days softer.",
+    url: "/",
+    siteName: "Brown Girl Club",
+    images: [
+      { url: "/logo/logo.png", width: 1200, height: 630, alt: "Brown Girl Club" },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Brown Girl Club | Membership for daily ritual",
+    description: "Daily coffee, real connection, and small luxuries that make big days softer.",
+    images: ["/logo/logo.png"],
   },
 };
 

@@ -130,6 +130,55 @@ export interface Database {
           issued_by?: string | null;
         };
       };
+      cashiers: {
+        Row: {
+          id: string;
+          email: string;
+          name: string | null;
+          invited_by: string | null;
+          status: string; // active | revoked
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          name?: string | null;
+          invited_by?: string | null;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          email?: string;
+          name?: string | null;
+          invited_by?: string | null;
+          status?: string;
+          updated_at?: string;
+        };
+      };
+      subscription_addons: {
+        Row: {
+          id: string;
+          subscription_id: string;
+          item_type: string;
+          quantity: number;
+          period_start: string;
+          period_end: string;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          subscription_id: string;
+          item_type: string;
+          quantity: number;
+          period_start: string;
+          period_end: string;
+          notes?: string | null;
+          created_at?: string;
+        };
+      };
     };
   };
 }
@@ -328,5 +377,71 @@ export async function recordUsage(data: {
 
   if (error) throw error;
   return usage;
+}
+
+export async function recordUsageBulk(params: {
+  userId: string;
+  subscriptionId: string;
+  itemType: string;
+  itemName?: string;
+  location?: string;
+  quantity: number;
+}) {
+  const quantity = Math.max(1, Math.trunc(params.quantity || 1));
+  const rows = Array.from({ length: quantity }).map(() => ({
+    user_id: params.userId,
+    subscription_id: params.subscriptionId,
+    item_type: params.itemType,
+    item_name: params.itemName || null,
+    location: params.location || null,
+  }));
+  const { data, error } = await (supabase as any)
+    .from('usage')
+    .insert(rows)
+    .select();
+  if (error) throw error;
+  return data;
+}
+
+export async function addSubscriptionAddon(params: {
+  subscriptionId: string;
+  itemType: string;
+  quantity: number;
+  periodStart: string;
+  periodEnd: string;
+  notes?: string;
+}): Promise<Database['public']['Tables']['subscription_addons']['Row']> {
+  const { data, error } = await (supabase as any)
+    .from('subscription_addons')
+    .insert({
+      subscription_id: params.subscriptionId,
+      item_type: params.itemType,
+      quantity: Math.max(1, Math.trunc(params.quantity)),
+      period_start: params.periodStart,
+      period_end: params.periodEnd,
+      notes: params.notes || null,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data as Database['public']['Tables']['subscription_addons']['Row'];
+}
+
+export async function sumSubscriptionAddonsInPeriod(params: {
+  subscriptionId: string;
+  itemType: string;
+  periodStart: string;
+  periodEnd: string;
+}): Promise<number> {
+  const { data, error } = await (supabase as any)
+    .from('subscription_addons')
+    .select('quantity')
+    .eq('subscription_id', params.subscriptionId)
+    .eq('item_type', params.itemType)
+    .gte('period_start', params.periodStart)
+    .lte('period_end', params.periodEnd);
+  if (error) throw error;
+  const rows = (data || []) as { quantity: number }[];
+  return rows.reduce((sum, r) => sum + (Number(r.quantity) || 0), 0);
 }
 

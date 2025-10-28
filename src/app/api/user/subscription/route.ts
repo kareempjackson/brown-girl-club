@@ -101,6 +101,10 @@ export async function GET(request: NextRequest) {
           remainingCoffees: coffeeValidation.remainingCoffees,
           remainingFood: foodValidation.remainingFood,
           unlimited: coffeeValidation.subscription && coffeeValidation.subscription.plan_id === 'unlimited' ? true : false,
+          period: {
+            start: coffeeValidation.subscription.current_period_start,
+            end: coffeeValidation.subscription.current_period_end,
+          },
         };
       } catch (e) {
         // swallow limits errors to not break dashboard

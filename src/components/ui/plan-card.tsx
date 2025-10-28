@@ -58,10 +58,10 @@ export function PlanCard({ name, price, perks, featured = false }: PlanCardProps
 
 function slugFromName(name: string): string {
   const map: Record<string, string> = {
-    "3 coffees / week": "3-coffees",
-    "Daily coffee": "daily-coffee",
-    "Creator+": "creator",
-    "House Unlimited": "unlimited",
+    "The Chill Mode": "3-coffees",
+    "The Daily Fix": "daily-coffee",
+    "The Double Shot Life": "creator",
+    "The Caffeine Royalty": "unlimited",
   };
   return map[name] || name.toLowerCase().replace(/\s+/g, '-');
 }

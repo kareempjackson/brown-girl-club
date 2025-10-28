@@ -2,7 +2,7 @@ export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { verifyAdminToken } from '@/lib/admin-auth';
-import { supabase } from '@/lib/supabase';
+import { supabase, addSubscriptionAddon } from '@/lib/supabase';
 import { getTodayUsageSummary } from '@/lib/redemption';
 import type { Database } from '@/lib/supabase';
 
@@ -80,6 +80,57 @@ export async function GET(_req: NextRequest) {
     return NextResponse.json({ subscribers: rows, count: rows.length, generatedAt: new Date().toISOString() }, { status: 200 });
   } catch (e: any) {
     console.error('Admin subscribers API error:', e);
+    return NextResponse.json({ error: e.message || 'Internal server error' }, { status: 500 });
+  }
+}
+
+// POST /api/admin/subscribers
+// Body: { action: 'add_addon', subscriptionId: string, itemType: 'coffee', quantity: number }
+export async function POST(req: NextRequest) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('bgc_admin')?.value || '';
+    const admin = verifyAdminToken(token);
+    if (!admin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const action = String(body?.action || '');
+    if (action !== 'add_addon') {
+      return NextResponse.json({ error: 'Unsupported action' }, { status: 400 });
+    }
+    const subscriptionId = String(body?.subscriptionId || '');
+    const itemType = String(body?.itemType || 'coffee');
+    const quantity = Math.max(1, Math.trunc(Number(body?.quantity) || 0));
+    if (!subscriptionId || !itemType || !quantity) {
+      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+    }
+
+    // Load subscription for period bounds
+    const { data: sub, error } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('id', subscriptionId)
+      .single();
+    if (error || !sub) return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
+
+    const subRow = (sub as unknown) as DbSubscriptionRow;
+    const periodStart = subRow.current_period_start;
+    const periodEnd = subRow.current_period_end;
+
+    const row = await addSubscriptionAddon({
+      subscriptionId,
+      itemType,
+      quantity,
+      periodStart,
+      periodEnd,
+      notes: `Added by ${admin.email}`,
+    });
+
+    return NextResponse.json({ ok: true, addon: row }, { status: 200 });
+  } catch (e: any) {
+    console.error('Admin add addon error:', e);
     return NextResponse.json({ error: e.message || 'Internal server error' }, { status: 500 });
   }
 }

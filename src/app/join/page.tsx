@@ -22,7 +22,16 @@ function JoinClient() {
 
   useEffect(() => {
     const param = searchParams.get("plan");
-    const allowed = new Set(["3-coffees", "daily-coffee", "creator", "unlimited"]);
+    const allowed = new Set([
+      "3-coffees",
+      "daily-coffee",
+      "creator",
+      "unlimited",
+      "meal-5",
+      "meal-10",
+      "meal-15",
+      "meal-20",
+    ]);
     if (param && allowed.has(param) && param !== form.planId) {
       setForm((prev) => ({ ...prev, planId: param }));
     }
@@ -86,10 +95,16 @@ function JoinClient() {
                 onChange={(e) => setForm({ ...form, planId: e.target.value })}
                 className="w-full px-4 py-3 bg-white border border-[var(--color-ink)]/15 rounded-xl text-sm text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-all"
               >
-                <option value="3-coffees">Bronze — 3 Coffees / Week</option>
-                <option value="daily-coffee">Silver — Daily Coffee</option>
-                <option value="creator">Gold — Creator+ (Bundle & Save)</option>
-                <option value="unlimited">Platinum — House 4/day (Bundle & Save)</option>
+                <option value="3-coffees">The Chill Mode — 3 Coffees / Week</option>
+                <option value="daily-coffee">The Daily Fix — 1 Coffee / Day</option>
+                <option value="creator">The Double Shot Life — 2 Coffees / Day</option>
+                <option value="unlimited">The Caffeine Royalty — 4 Coffees / Day</option>
+                <optgroup label="Meal Prep">
+                  <option value="meal-5">5-Day Meal Prep — $446 EC ($89/day)</option>
+                  <option value="meal-10">10-Day Meal Prep — $837 EC ($84/day)</option>
+                  <option value="meal-15">15-Day Meal Prep — $1175 EC ($78/day)</option>
+                  <option value="meal-20">20-Day Meal Prep — $1458 EC ($73/day)</option>
+                </optgroup>
               </select>
             </div>
 

@@ -4,10 +4,14 @@ import { getOrCreateUser, createSubscription } from '@/lib/supabase';
 
 function getPlanDisplayName(planId: string): string {
   const planNames: Record<string, string> = {
-    '3-coffees': '3 coffees / week',
-    'daily-coffee': 'Daily coffee',
-    'creator': 'Creator+ (Bundle & Save)',
-    'unlimited': 'House 4/day (Bundle & Save)',
+    '3-coffees': 'The Chill Mode — 3 Coffees / Week',
+    'daily-coffee': 'The Daily Fix — 1 Coffee / Day',
+    'creator': 'The Double Shot Life — 2 Coffees / Day',
+    'unlimited': 'The Caffeine Royalty — 4 Coffees / Day',
+    'meal-5': '5-Day Meal Prep',
+    'meal-10': '10-Day Meal Prep',
+    'meal-15': '15-Day Meal Prep',
+    'meal-20': '20-Day Meal Prep',
   };
   return planNames[planId] || 'Membership';
 }

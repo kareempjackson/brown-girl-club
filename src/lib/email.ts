@@ -117,6 +117,20 @@ export function renderMagicLinkEmail(params: { verifyUrl: string; baseUrl?: stri
   return { subject: 'Sign in to Brown Girl Club', html } as const;
 }
 
+export function renderCashierInviteEmail(params: { inviteUrl: string; baseUrl?: string }) {
+  const espresso = '#4B2E22';
+  const content = `
+    <h2 style="margin:0 0 8px 0; color:${espresso}; font-size:24px;">You're invited to be a Cashier</h2>
+    <p style="margin:0 0 16px 0; line-height:1.6;">You've been granted cashier access to Brown Girl Club. Click below to accept and open the cashier dashboard.</p>
+    <p style="margin: 12px 0 24px 0;">
+      <a class="btn" href="${params.inviteUrl}">Accept invite</a>
+    </p>
+    <p style="margin:0; font-size:12px; color: rgba(41,41,41,0.7);">This link expires in 1 hour. If you weren't expecting this, you can ignore this email.</p>
+  `;
+  const html = renderEmailLayout({ title: 'Cashier Invitation', preheader: 'Accept your cashier invite', contentHtml: content, baseUrl: params.baseUrl });
+  return { subject: 'You are invited: Brown Girl Club Cashier', html } as const;
+}
+
 export function renderInvoiceEmail(params: {
   name: string;
   planName: string;

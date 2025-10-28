@@ -51,6 +51,14 @@ export default function AdminDashboardPage() {
   const [cashierMessage, setCashierMessage] = useState<string | null>(null);
   const [cashierSubscriptionId, setCashierSubscriptionId] = useState<string | null>(null);
 
+  // Cashier management (admin only; API enforces permission, UI hides if not allowed)
+  type Cashier = { id: string; email: string; name: string | null; status: string; created_at: string };
+  const [cashiers, setCashiers] = useState<Cashier[] | null>(null);
+  const [cashiersError, setCashiersError] = useState<string | null>(null);
+  const [cashierFormEmail, setCashierFormEmail] = useState("");
+  const [cashierFormName, setCashierFormName] = useState("");
+  const [cashiersLoading, setCashiersLoading] = useState(false);
+
   // Live-filter table by email as the cashier types
   useEffect(() => {
     setSearchQuery(cashierEmail);
@@ -69,6 +77,84 @@ export default function AdminDashboardPage() {
       }
     })();
   }, []);
+
+  // Load cashiers list (if admin; 403 hides the section)
+  useEffect(() => {
+    (async () => {
+      try {
+        setCashiersError(null);
+        const res = await fetch('/api/admin/cashiers', { cache: 'no-store', credentials: 'same-origin' });
+        if (res.status === 403) { setCashiers(null); return; }
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to load cashiers');
+        setCashiers((data.cashiers || []) as Cashier[]);
+      } catch (e: any) {
+        setCashiersError(e.message || 'Failed to load cashiers');
+      }
+    })();
+  }, []);
+
+  async function inviteCashier() {
+    try {
+      setCashiersLoading(true);
+      setCashiersError(null);
+      const res = await fetch('/api/admin/cashiers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ email: cashierFormEmail.trim(), name: cashierFormName.trim() || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to send invite');
+      // refresh list
+      const list = await fetch('/api/admin/cashiers', { cache: 'no-store', credentials: 'same-origin' });
+      const listData = await list.json();
+      if (list.ok) setCashiers((listData.cashiers || []) as Cashier[]);
+      setCashierFormEmail('');
+      setCashierFormName('');
+    } catch (e: any) {
+      setCashiersError(e.message || 'Failed to invite cashier');
+    } finally {
+      setCashiersLoading(false);
+    }
+  }
+
+  async function updateCashier(id: string, updates: Partial<Pick<Cashier, 'name' | 'status'>>) {
+    try {
+      setCashiersLoading(true);
+      const res = await fetch(`/api/admin/cashiers/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify(updates),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update cashier');
+      setCashiers(prev => (prev || []).map(c => c.id === id ? (data.cashier as Cashier) : c));
+    } catch (e: any) {
+      setCashiersError(e.message || 'Failed to update cashier');
+    } finally {
+      setCashiersLoading(false);
+    }
+  }
+
+  async function deleteCashier(id: string) {
+    try {
+      if (!confirm('Remove this cashier?')) return;
+      setCashiersLoading(true);
+      const res = await fetch(`/api/admin/cashiers/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        credentials: 'same-origin',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to remove cashier');
+      setCashiers(prev => (prev || []).filter(c => c.id !== id));
+    } catch (e: any) {
+      setCashiersError(e.message || 'Failed to remove cashier');
+    } finally {
+      setCashiersLoading(false);
+    }
+  }
 
   // Calculate metrics
   const metrics = useMemo(() => {
@@ -366,6 +452,105 @@ export default function AdminDashboardPage() {
             <p className="text-xs text-[var(--color-ink)]/60">Last subscription ID: {cashierSubscriptionId}</p>
           )}
         </div>
+
+        {/* Cashier Management (Admins only; hidden if unauthorized) */}
+        {cashiers && (
+          <div className="bg-white rounded-2xl p-6 lg:p-8 border border-[var(--color-ink)]/10 mb-12">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+              <h2 className="text-serif text-3xl text-[var(--color-accent)]">Cashier Management</h2>
+              {cashiersError && <p className="text-sm text-red-700">{cashiersError}</p>}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-accent)]/70 mb-2">Email</label>
+                <input
+                  type="email"
+                  value={cashierFormEmail}
+                  onChange={e => setCashierFormEmail(e.target.value)}
+                  placeholder="cashier@example.com"
+                  className="w-full px-4 py-3 bg-white border border-[var(--color-ink)]/15 rounded-xl text-sm text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-accent)]/70 mb-2">Name (optional)</label>
+                <input
+                  type="text"
+                  value={cashierFormName}
+                  onChange={e => setCashierFormName(e.target.value)}
+                  placeholder="Jane Doe"
+                  className="w-full px-4 py-3 bg-white border border-[var(--color-ink)]/15 rounded-xl text-sm text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-all"
+                />
+              </div>
+              <div className="flex items-end">
+                <button
+                  onClick={inviteCashier}
+                  disabled={cashiersLoading || !cashierFormEmail.trim()}
+                  className="w-full bg-[var(--color-accent)] text-white px-6 py-3 rounded-xl text-sm font-bold uppercase tracking-wide hover:bg-[var(--color-accent)]/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {cashiersLoading ? 'Sending…' : 'Invite / Resend Invite'}
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto border border-[var(--color-ink)]/10 rounded-xl">
+              <table className="min-w-full text-sm">
+                <thead className="bg-[var(--color-porcelain)]/60">
+                  <tr>
+                    <th className="text-left px-4 py-3 font-semibold">Email</th>
+                    <th className="text-left px-4 py-3 font-semibold">Name</th>
+                    <th className="text-left px-4 py-3 font-semibold">Status</th>
+                    <th className="text-left px-4 py-3 font-semibold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(cashiers || []).map(c => (
+                    <tr key={c.id} className="border-t border-[var(--color-ink)]/10">
+                      <td className="px-4 py-3">{c.email}</td>
+                      <td className="px-4 py-3">
+                        <input
+                          type="text"
+                          defaultValue={c.name || ''}
+                          onBlur={e => {
+                            const val = e.target.value.trim();
+                            if (val !== (c.name || '')) updateCashier(c.id, { name: val || null as any });
+                          }}
+                          className="px-3 py-2 bg-white border border-[var(--color-ink)]/15 rounded-lg text-sm w-full"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <select
+                          value={c.status}
+                          onChange={e => updateCashier(c.id, { status: e.target.value })}
+                          className="px-3 py-2 bg-white border border-[var(--color-ink)]/15 rounded-lg text-sm"
+                        >
+                          <option value="active">active</option>
+                          <option value="revoked">revoked</option>
+                        </select>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => { setCashierFormEmail(c.email); setCashierFormName(c.name || ''); inviteCashier(); }}
+                            className="px-3 py-2 bg-[var(--color-porcelain)] text-[var(--color-accent)] rounded-lg hover:bg-[var(--color-porcelain)]/70"
+                          >
+                            Resend Invite
+                          </button>
+                          <button
+                            onClick={() => deleteCashier(c.id)}
+                            className="px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Subscribers Table Section */}
         <div className="bg-white rounded-2xl p-6 lg:p-8 border border-[var(--color-ink)]/10">

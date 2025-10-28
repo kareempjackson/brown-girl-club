@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 const PLANS = [
   {
     id: "3-coffees",
-    title: "3 coffees / week",
+    title: "The Chill Mode — 3 Coffees / Week",
     price: "$199",
     priceValue: 199,
     savings: "save $65",
@@ -15,7 +15,7 @@ const PLANS = [
   },
   {
     id: "daily-coffee",
-    title: "Daily coffee",
+    title: "The Daily Fix — 1 Coffee / Day",
     price: "$400",
     priceValue: 400,
     savings: "save $216",
@@ -24,7 +24,7 @@ const PLANS = [
   },
   {
     id: "creator",
-    title: "Creator+",
+    title: "The Double Shot Life — 2 Coffees / Day",
     price: "$950",
     priceValue: 950,
     savings: "save $282",
@@ -32,7 +32,7 @@ const PLANS = [
   },
   {
     id: "unlimited",
-    title: "House Unlimited",
+    title: "The Caffeine Royalty — 4 Coffees / Day",
     price: "$1500",
     priceValue: 1500,
     benefits: ["Unlimited coffee", "20% off food items", "Choice: 1 free breakfast or lunch per week"]
