@@ -477,8 +477,8 @@ function SubscribeSection() {
     {
       title: "The Chill Mode",
       description: "Take it slow, sip it right. For the ones who live for good vibes and lazy mornings. Three coffees a week to keep life flavorful, not frantic.",
-      price: "$74 USD ($199 EC)",
-      savings: "save $65",
+      price: "$75 USD ($199 EC)",
+      savings: "(save $29 EC)",
       benefits: [
         "Food specials & discounts",
         "Pause, skip or cancel at any time.",
@@ -491,8 +491,8 @@ function SubscribeSection() {
     {
       title: "The Daily Fix",
       description: "Your everyday dose of happy. One coffee a day to keep your mood lifted and your hustle smooth. No day starts without it.",
-      price: "$148 USD ($400 EC)",
-      savings: "save $216",
+      price: "$150 USD ($400 EC)",
+      savings: "save $170 EC",
       benefits: [
         "1 coffee per day",
         "20% off food items",
@@ -505,8 +505,8 @@ function SubscribeSection() {
     {
       title: "The Double Shot Life",
       description: "Twice the coffee, twice the vibe. Morning grind, afternoon unwind. For the movers, shakers, and dream chasers who need that extra boost.",
-      price: "$352 USD ($950 EC)",
-      savings: "save $282",
+      price: "$355 USD ($950 EC)",
+      savings: "save $190 EC",
       benefits: [
         "Up to 2 coffees per day (shared)",
         "20% off food items",
@@ -519,7 +519,8 @@ function SubscribeSection() {
     {
       title: "The Caffeine Royalty",
       description: "All day. Every day. Own it. Four cups a day — bold, unapologetic, and absolutely on brand for the coffee-obsessed. You don't just drink coffee; you reign with it.",
-      price: "$556 USD ($1500 EC)",
+      price: "$561 USD ($1500 EC)",
+      savings: "save $628 EC",
       benefits: [
         "Up to 4 coffees per day (shared)",
         "20% off food items",
