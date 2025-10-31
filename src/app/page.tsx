@@ -477,8 +477,8 @@ function SubscribeSection() {
     {
       title: "The Chill Mode",
       description: "Take it slow, sip it right. For the ones who live for good vibes and lazy mornings. Three coffees a week to keep life flavorful, not frantic.",
-      price: "$75 USD ($199 EC)",
-      savings: "(save $29 EC)",
+      price: "$75 USD ($200 EC)",
+      savings: "(save $28 EC)",
       benefits: [
         "Food specials & discounts",
         "Pause, skip or cancel at any time.",
@@ -486,13 +486,13 @@ function SubscribeSection() {
       ],
       buttonText: "SUBSCRIBE NOW",
       bgColor: "#E7D4AF",
-      onButtonClick: () => window.location.href = '/join?plan=3-coffees',
+      onButtonClick: () => window.location.href = '/join?plan=chill-mode',
     },
     {
       title: "The Daily Fix",
       description: "Your everyday dose of happy. One coffee a day to keep your mood lifted and your hustle smooth. No day starts without it.",
-      price: "$150 USD ($400 EC)",
-      savings: "save $170 EC",
+      price: "$169 USD ($450 EC)",
+      savings: "save $120 EC",
       benefits: [
         "1 coffee per day",
         "20% off food items",
@@ -505,8 +505,8 @@ function SubscribeSection() {
     {
       title: "The Double Shot Life",
       description: "Twice the coffee, twice the vibe. Morning grind, afternoon unwind. For the movers, shakers, and dream chasers who need that extra boost.",
-      price: "$355 USD ($950 EC)",
-      savings: "save $190 EC",
+      price: "$300 USD ($800 EC)",
+      savings: "save $340 EC",
       benefits: [
         "Up to 2 coffees per day (shared)",
         "20% off food items",
@@ -514,13 +514,13 @@ function SubscribeSection() {
       ],
       buttonText: "SUBSCRIBE NOW",
       bgColor: "#E7C1AC",
-      onButtonClick: () => window.location.href = '/join?plan=creator',
+      onButtonClick: () => window.location.href = '/join?plan=double-shot',
     },
     {
       title: "The Caffeine Royalty",
       description: "All day. Every day. Own it. Four cups a day — bold, unapologetic, and absolutely on brand for the coffee-obsessed. You don't just drink coffee; you reign with it.",
-      price: "$561 USD ($1500 EC)",
-      savings: "save $628 EC",
+      price: "$524 USD ($1400 EC)",
+      savings: "save $880 EC",
       benefits: [
         "Up to 4 coffees per day (shared)",
         "20% off food items",
@@ -529,7 +529,7 @@ function SubscribeSection() {
       buttonText: "SUBSCRIBE NOW",
       bgColor: "#5B3A2F",
       isDark: true,
-      onButtonClick: () => window.location.href = '/join?plan=unlimited',
+      onButtonClick: () => window.location.href = '/join?plan=caffeine-royalty',
     },
   ] as const;
 

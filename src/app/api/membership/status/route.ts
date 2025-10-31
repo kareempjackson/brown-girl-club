@@ -32,10 +32,15 @@ export async function POST(request: NextRequest) {
 
       // Create invoice (cash payment)
       const planPrices: Record<string, number> = {
-        '3-coffees': 199,
-        'daily-coffee': 400,
-        'creator': 950,
-        'unlimited': 1500,
+        // normalized ids
+        'chill-mode': 200,
+        'daily-coffee': 450,
+        'double-shot': 800,
+        'caffeine-royalty': 1400,
+        // legacy aliases
+        '3-coffees': 200,
+        'creator': 800,
+        'unlimited': 1400,
       };
       const amount = planPrices[subscription.plan_id] ?? 0;
       let invoice: any = null;

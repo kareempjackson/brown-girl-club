@@ -45,7 +45,7 @@ export default function CashierPage() {
   const [profileLoading, setProfileLoading] = useState(false);
   const [itemType, setItemType] = useState<ItemType>('coffee');
   const [itemName, setItemName] = useState('Coffee');
-  const [location, setLocation] = useState('Lance Aux Epines');
+  const [location, setLocation] = useState("L'anse aux Epines");
 
   useEffect(() => {
     (async () => {
@@ -290,7 +290,7 @@ export default function CashierPage() {
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--color-accent)]/70 mb-1">Location</label>
                     <select value={location} onChange={e => setLocation(e.target.value)} className="w-full px-3 py-2 bg-white border border-[var(--color-ink)]/15 rounded-lg text-sm">
-                      <option value="Lance Aux Epines">Lance Aux Epines</option>
+                      <option value="L'anse aux Epines">L'anse aux Epines</option>
                       <option value="True Blue">True Blue</option>
                     </select>
                   </div>

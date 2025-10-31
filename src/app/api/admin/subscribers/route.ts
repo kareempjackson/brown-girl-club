@@ -8,10 +8,10 @@ import { normalizePlanId, getPlanDisplayName } from '@/lib/plans';
 import type { Database } from '@/lib/supabase';
 
 const PLAN_PRICES: Record<string, number> = {
-  'chill-mode': 199,
-  'daily-coffee': 400,
-  'double-shot': 950,
-  'caffeine-royalty': 1500,
+  'chill-mode': 200,
+  'daily-coffee': 450,
+  'double-shot': 800,
+  'caffeine-royalty': 1400,
 };
 
 type DbSubscriptionRow = {

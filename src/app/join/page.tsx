@@ -129,7 +129,7 @@ function JoinClient() {
               </div>
             </div>
             <h2 className="text-serif text-3xl text-[var(--color-accent)] mb-3">Your membership is almost ready!</h2>
-            <p className="text-base text-[var(--color-ink)]/70 mb-6">Pay at Chebauffle House in True Blue or Brown Girl Cafe in Lance Aux Epines to activate your membership.</p>
+            <p className="text-base text-[var(--color-ink)]/70 mb-6">Pay at Chebaffle in True Blue or Brown Girl Cafe in L'anse aux Epines to activate your membership.</p>
             <p className="text-sm text-[var(--color-ink)]/60">Show your name or email at checkout. We’ll look you up and activate in seconds.</p>
           </div>
         )}

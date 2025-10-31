@@ -7,34 +7,34 @@ import { Button } from "@/components/ui/button";
 const PLANS = [
   {
     id: "3-coffees",
-    title: "The Chill Mode — 3 Coffees / Week",
-    price: "$199",
-    priceValue: 199,
+    title: "The Chill Mode — 12 Coffees / Month",
+    price: "$200",
+    priceValue: 200,
     savings: "save $65",
     benefits: ["Food specials & discounts", "Pause, skip or cancel anytime", "Member-only perks"]
   },
   {
     id: "daily-coffee",
-    title: "The Daily Fix — 1 Coffee / Day",
-    price: "$400",
-    priceValue: 400,
+    title: "The Daily Fix — 30 Coffees / Month",
+    price: "$450",
+    priceValue: 450,
     savings: "save $216",
     benefits: ["1 coffee per day", "20% off food items", "1 free dessert per week"],
     current: true
   },
   {
     id: "creator",
-    title: "The Double Shot Life — 2 Coffees / Day",
-    price: "$950",
-    priceValue: 950,
+    title: "The Double Shot Life — 60 Coffees / Month",
+    price: "$800",
+    priceValue: 800,
     savings: "save $282",
     benefits: ["2 coffees per day", "20% off food items", "1 free lunch per week"]
   },
   {
     id: "unlimited",
-    title: "The Caffeine Royalty — 4 Coffees / Day",
-    price: "$1500",
-    priceValue: 1500,
+    title: "The Caffeine Royalty — 120 Coffees / Month",
+    price: "$1400",
+    priceValue: 1400,
     benefits: ["Unlimited coffee", "20% off food items", "Choice: 1 free breakfast or lunch per week"]
   }
 ];

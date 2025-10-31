@@ -202,8 +202,8 @@ export function renderCashPaymentReminderEmail(params: {
     <p style="margin:0 0 8px 0;">Hi ${params.name},</p>
     <p style="margin:0 0 12px 0;">Thanks for joining Brown Girl Club! To activate your <strong>${params.planName}</strong> membership, please complete your cash payment at one of our locations:</p>
     <ul style="margin:0 0 12px 20px;">
-      <li><strong>Brown Girl Cafe</strong>, Lance Aux Epines</li>
-      <li><strong>Chebauffle House</strong>, True Blue</li>
+      <li><strong>Brown Girl Cafe</strong>, L'anse aux Epines</li>
+      <li><strong>Chebaffle</strong>, True Blue</li>
     </ul>
     <p style="margin:0 0 12px 0;">Tell the cashier your email address so we can mark your subscription as paid right away.</p>
     <p style="margin:0 0 0 0; font-size:12px; color: rgba(41,41,41,0.7);">If you have any questions, just reply to this email.</p>

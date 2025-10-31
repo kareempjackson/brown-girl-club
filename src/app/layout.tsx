@@ -124,7 +124,7 @@ function Footer() {
               </li>
               <li>
                 <Link href="#" className="text-sm text-white/70 hover:text-white transition-colors uppercase tracking-wide">
-                  Lance Aux Epines
+                  L'anse aux Epines
                 </Link>
               </li>
             </ul>

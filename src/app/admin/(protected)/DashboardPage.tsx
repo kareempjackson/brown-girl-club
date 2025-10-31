@@ -28,10 +28,10 @@ export interface Subscriber {
 
 // Plan data
 const PLANS = {
-  "3-coffees": { name: "3 coffees / week", price: 199 },
-  "daily-coffee": { name: "Daily coffee", price: 400 },
-  "creator": { name: "Creator+", price: 950 },
-  "unlimited": { name: "House Unlimited", price: 1500 }
+  "3-coffees": { name: "12 coffees / month", price: 200 },
+  "daily-coffee": { name: "30 coffees / month", price: 450 },
+  "creator": { name: "60 coffees / month", price: 800 },
+  "unlimited": { name: "120 coffees / month", price: 1400 }
 };
 
 // Comprehensive mock data - 25 subscribers
@@ -802,10 +802,10 @@ export default function AdminDashboardPage() {
                 className="w-full px-4 py-3 bg-white border border-[var(--color-ink)]/15 rounded-xl text-sm text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-all"
               >
                 <option value="all">All Plans</option>
-                <option value="3-coffees">3 coffees / week</option>
-                <option value="daily-coffee">Daily coffee</option>
-                <option value="creator">Creator+</option>
-                <option value="unlimited">House Unlimited</option>
+                <option value="3-coffees">12 coffees / month</option>
+                <option value="daily-coffee">30 coffees / month</option>
+                <option value="creator">60 coffees / month</option>
+                <option value="unlimited">120 coffees / month</option>
               </select>
             </div>
           </div>
