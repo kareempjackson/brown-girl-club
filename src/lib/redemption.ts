@@ -37,11 +37,19 @@ export interface PlanLimits {
   coffeePerWeek?: number;
   coffeePerMonth?: number;
   foodPerDay?: number;
+  foodPerMonth?: number;
   unlimited?: boolean;
 }
 
 // Define limits for each plan
 export const PLAN_LIMITS: Record<string, PlanLimits> = {
+  // New plans (meals-focused)
+  'daily-brew': {
+    foodPerMonth: 2,
+  },
+  'supreme-brew-club': {
+    foodPerMonth: 4,
+  },
   // Chill Mode (12/month)
   'chill-mode': {
     coffeePerMonth: 12,
@@ -152,6 +160,46 @@ export async function validateRedemption(
     }
 
     // 7. Check daily food limit
+  // 7a. Check monthly food limit (for new plans)
+  if (itemType === 'food' && limits.foodPerMonth) {
+    const periodStart = new Date(subscription.current_period_start);
+    const periodEnd = new Date(subscription.current_period_end);
+
+    const { data: monthRows, error: monthErr } = await supabase
+      .from('usage')
+      .select('*')
+      .eq('subscription_id', subscription.id)
+      .eq('item_type', 'food')
+      .gte('redeemed_at', periodStart.toISOString())
+      .lte('redeemed_at', periodEnd.toISOString());
+    if (monthErr) {
+      console.error('Error fetching monthly food usage:', monthErr);
+      return {
+        isValid: false,
+        reason: 'Error checking usage',
+        subscription,
+      };
+    }
+    const monthUsage = (monthRows || []) as Database['public']['Tables']['usage']['Row'][];
+    const foodsThisPeriod = monthUsage.length || 0;
+    const allowance = limits.foodPerMonth || 0;
+    if (foodsThisPeriod >= allowance) {
+      return {
+        isValid: false,
+        reason: `Monthly meal limit reached (${allowance})`,
+        subscription,
+        remainingFood: 0,
+      };
+    }
+    return {
+      isValid: true,
+      subscription,
+      usageToday,
+      remainingFood: Math.max(0, allowance - foodsThisPeriod),
+    };
+  }
+
+  // 7b. Daily food limit (legacy creator bundle)
     if (itemType === 'food' && limits.foodPerDay) {
       const foodToday = usageToday?.filter((u) => u.item_type === 'food').length || 0;
       if (foodToday >= limits.foodPerDay) {
@@ -444,4 +492,28 @@ export async function getCoffeeAllowanceForPeriod(params: {
     addonTotal = 0;
   }
   return base + addonTotal;
+}
+
+/**
+ * Get number of meals (food) redeemed within a subscription's current period
+ */
+export async function getFoodUsageInPeriod(params: {
+  subscriptionId: string;
+  periodStart: string; // ISO
+  periodEnd: string;   // ISO
+}): Promise<number> {
+  try {
+    const { data, error } = await supabase
+      .from('usage')
+      .select('id')
+      .eq('subscription_id', params.subscriptionId)
+      .eq('item_type', 'food')
+      .gte('redeemed_at', params.periodStart)
+      .lte('redeemed_at', params.periodEnd);
+    if (error) throw error;
+    return (data || []).length;
+  } catch (e) {
+    console.error('Error fetching period food usage:', e);
+    return 0;
+  }
 }

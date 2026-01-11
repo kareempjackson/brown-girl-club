@@ -7,7 +7,7 @@ import { EditSubscriberModal } from "@/components/admin/EditSubscriberModal";
 
 // Types
 export type SubscriptionStatus = "active" | "unpaid" | "paused" | "cancelled";
-export type PlanId = "3-coffees" | "daily-coffee" | "creator" | "unlimited";
+export type PlanId = string;
 
 export interface Subscriber {
   id: string;
@@ -27,11 +27,9 @@ export interface Subscriber {
 }
 
 // Plan data
-const PLANS = {
-  "3-coffees": { name: "12 coffees / month", price: 200 },
-  "daily-coffee": { name: "30 coffees / month", price: 450 },
-  "creator": { name: "60 coffees / month", price: 800 },
-  "unlimited": { name: "120 coffees / month", price: 1400 }
+const PLANS: Record<string, { name: string; price: number }> = {
+  "daily-brew": { name: "The Daily Brew", price: 25 },
+  "supreme-brew-club": { name: "The Supreme Brew Club", price: 35 },
 };
 
 // Comprehensive mock data - 25 subscribers
@@ -802,10 +800,8 @@ export default function AdminDashboardPage() {
                 className="w-full px-4 py-3 bg-white border border-[var(--color-ink)]/15 rounded-xl text-sm text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-all"
               >
                 <option value="all">All Plans</option>
-                <option value="3-coffees">12 coffees / month</option>
-                <option value="daily-coffee">30 coffees / month</option>
-                <option value="creator">60 coffees / month</option>
-                <option value="unlimited">120 coffees / month</option>
+                <option value="daily-brew">The Daily Brew</option>
+                <option value="supreme-brew-club">The Supreme Brew Club</option>
               </select>
             </div>
           </div>

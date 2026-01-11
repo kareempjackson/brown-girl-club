@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
-import { PLAN_PRICES, getPlanDisplayName, isBundlePlan, normalizePlanId, getMonthlyCoffeeAllowance } from "@/lib/plans";
+import { PLAN_PRICES, getPlanDisplayName, normalizePlanId } from "@/lib/plans";
 
 export default function DashboardPage() {
   const searchParams = useSearchParams();
@@ -77,8 +77,8 @@ export default function DashboardPage() {
   const hasPending = !subscription && (allSubscriptions || []).some((s: any) => s.status === 'pending_payment');
 
   // Calculate usage percentage (for progress bar)
-  const monthlyTotal = usage?.period?.coffees ?? usage.today.total;
-  const monthlyAllowance = usage?.period?.allowance ?? (subscription ? getMonthlyCoffeeAllowance(subscription.planId) : 30);
+  const monthlyTotal = usage?.period?.meals ?? usage.today.food;
+  const monthlyAllowance = usage?.period?.allowance ?? 0;
   const usagePercentage = monthlyTotal > 0 ? (monthlyTotal / monthlyAllowance) * 100 : 0;
 
   return (
@@ -166,24 +166,9 @@ export default function DashboardPage() {
                   </p>
                   <p className="text-base text-[var(--color-ink)]">
                     {(() => {
-                      const planId = normalizePlanId(subscription.planId);
-                      const rC = limits?.remainingCoffees ?? undefined;
-                      const rF = limits?.remainingFood ?? undefined;
-                      const allowance = usage?.period?.allowance ?? 30;
-                      const used = usage?.period?.coffees ?? 0;
-                      if (['chill-mode','daily-coffee','double-shot','caffeine-royalty'].includes(planId)) {
-                        return `${Math.max(0, allowance - used)} of ${allowance} coffees remaining this period`;
-                      }
-                      if ((subscription.planId as any) === '3-coffees') {
-                        return `${rC ?? 0}/3 coffees remaining this week`;
-                      }
-                      if ((subscription.planId as any) === 'creator') {
-                        return `Today: ${rC ?? 0}/1 coffee, ${rF ?? 0}/1 food`;
-                      }
-                      if ((subscription.planId as any) === 'unlimited') {
-                        return 'Unlimited access';
-                      }
-                      return getPlanDisplayName(subscription.planId);
+                      const allowance = usage?.period?.allowance ?? 0;
+                      const used = usage?.period?.meals ?? 0;
+                      return `${Math.max(0, allowance - used)} of ${allowance} free meals remaining this period`;
                     })()}
                   </p>
                 </div>
@@ -256,7 +241,7 @@ export default function DashboardPage() {
                 />
               </div>
 
-              <p className="text-sm text-[var(--color-ink)]/60 leading-relaxed">
+                  <p className="text-sm text-[var(--color-ink)]/60 leading-relaxed">
                 {subscription ? (
                   usage?.period ? (
                     <>Your usage period ends on {new Date(usage.period.end).toLocaleDateString()}.</>
@@ -310,36 +295,7 @@ export default function DashboardPage() {
 
           {/* Right Column: Quick Actions, Members & Billing */}
           <div className="space-y-8">
-            {/* Bundle Members */}
-            {subscription && isBundlePlan(subscription.planId) && (
-              <div className="bg-white rounded-2xl p-8 border border-[var(--color-ink)]/10">
-                <h3 className="text-serif text-xl text-[var(--color-accent)] mb-6">
-                  Members on your plan
-                </h3>
-                <AddMember 
-                  remainingInvites={(() => {
-                    const planId = normalizePlanId(subscription.planId);
-                    const maxSeats = planId === 'double-shot' ? 2 : 4;
-                    const currentSeats = 1 + ((userData.members || []).length || 0);
-                    return Math.max(0, maxSeats - currentSeats);
-                  })()}
-                  onSent={() => {
-                    // Refresh after sending invite
-                    fetch('/api/user/subscription').then(r => r.json()).then(setUserData).catch(() => {});
-                  }}
-                />
-                <div className="mt-6 space-y-3">
-                  {(userData.members || []).map((m: any) => (
-                    <div key={m.id || m.email} className="flex items-center justify-between p-3 rounded-xl bg-[var(--color-porcelain)]/40">
-                      <div>
-                        <p className="text-sm font-medium text-[var(--color-ink)]">{m.name || 'Member'}</p>
-                        <p className="text-xs text-[var(--color-ink)]/60">{m.email}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Bundle Members - not applicable for current plans, section removed */}
             {/* Quick Actions */}
             <div className="bg-white rounded-2xl p-8 border border-[var(--color-ink)]/10">
               <h3 className="text-serif text-xl text-[var(--color-accent)] mb-6">

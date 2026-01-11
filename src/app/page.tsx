@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PlanCard } from "@/components/ui/plan-card";
+import Image from "next/image";
 
 export default function HomePage() {
   const heroRef = useRef<HTMLElement>(null);
@@ -93,12 +94,14 @@ export default function HomePage() {
         className="min-h-[85vh] sm:min-h-screen flex items-center justify-center pt-20 sm:pt-28 lg:pt-40 pb-14 sm:pb-20 lg:pb-32 -mt-20 sm:-mt-20 md:-mt-24 relative overflow-hidden"
       >
         <div className="absolute inset-0 z-0 overflow-hidden">
-          <div
-            className="absolute inset-0 bg-center bg-cover will-change-transform hero-zoom"
-            style={{
-              backgroundImage: "url(https://eouiynfsgaiavzvlfwpa.supabase.co/storage/v1/object/public/club_img/P1457240.jpg)",
-              transform: "translate3d(var(--tx,0), var(--ty,0), 0) scale(1.06)",
-            }}
+          <Image
+            src="https://eouiynfsgaiavzvlfwpa.supabase.co/storage/v1/object/public/club_img/P1457240.jpg"
+            alt=""
+            fill
+            priority
+            className="object-cover will-change-transform hero-zoom"
+            style={{ transform: "translate3d(var(--tx,0), var(--ty,0), 0) scale(1.06)" }}
+            sizes="100vw"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
           <div className="absolute inset-0 pointer-events-none hero-light" />
@@ -460,11 +463,9 @@ function FeatureBandSection() {
 
 function SubscribeSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [selectedCategory, setSelectedCategory] = useState<'coffee' | 'meal'>('coffee');
-
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
-      const scrollAmount = window.innerWidth < 640 ? 320 : 460; // Smaller scroll on mobile
+      const scrollAmount = window.innerWidth < 640 ? 320 : 460;
       scrollRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth'
@@ -472,123 +473,32 @@ function SubscribeSection() {
     }
   };
 
-  // Define plans for both categories and switch based on selection
-  const coffeePlans = [
+  const plans = [
     {
-      title: "The Chill Mode",
-      description: "Take it slow, sip it right. For the ones who live for good vibes and lazy mornings. Three coffees a week to keep life flavorful, not frantic.",
-      price: "$75 USD ($200 EC)",
-      savings: "(save $28 EC)",
+      title: "The Daily Brew",
+      description: "Simple perks, every month. Enjoy great value with free meals and savings on everything else.",
+      price: "$25 USD / mo",
       benefits: [
-        "Food specials & discounts",
-        "Pause, skip or cancel at any time.",
-        "Member-only perks"
+        "Two free meals per month",
+        "15% savings on full menu offerings",
       ],
       buttonText: "SUBSCRIBE NOW",
       bgColor: "#E7D4AF",
-      onButtonClick: () => window.location.href = '/join?plan=chill-mode',
+      onButtonClick: () => window.location.href = '/join?plan=daily-brew',
     },
     {
-      title: "The Daily Fix",
-      description: "Your everyday dose of happy. One coffee a day to keep your mood lifted and your hustle smooth. No day starts without it.",
-      price: "$169 USD ($450 EC)",
-      savings: "save $120 EC",
+      title: "The Supreme Brew Club",
+      description: "More freedom, more flavor. Unlock more free meals and bigger savings.",
+      price: "$35 USD / mo",
       benefits: [
-        "1 coffee per day",
-        "20% off food items",
-        "1 free dessert per week"
+        "4 free meals per month",
+        "20% off menu offerings",
       ],
       buttonText: "SUBSCRIBE NOW",
       bgColor: "#F6EBDD",
-      onButtonClick: () => window.location.href = '/join?plan=daily-coffee',
-    },
-    {
-      title: "The Double Shot Life",
-      description: "Twice the coffee, twice the vibe. Morning grind, afternoon unwind. For the movers, shakers, and dream chasers who need that extra boost.",
-      price: "$300 USD ($800 EC)",
-      savings: "save $340 EC",
-      benefits: [
-        "Up to 2 coffees per day (shared)",
-        "20% off food items",
-        "1 free lunch per week"
-      ],
-      buttonText: "SUBSCRIBE NOW",
-      bgColor: "#E7C1AC",
-      onButtonClick: () => window.location.href = '/join?plan=double-shot',
-    },
-    {
-      title: "The Caffeine Royalty",
-      description: "All day. Every day. Own it. Four cups a day — bold, unapologetic, and absolutely on brand for the coffee-obsessed. You don't just drink coffee; you reign with it.",
-      price: "$524 USD ($1400 EC)",
-      savings: "save $880 EC",
-      benefits: [
-        "Up to 4 coffees per day (shared)",
-        "20% off food items",
-        "Choice: 1 free breakfast or 1 free lunch per week"
-      ],
-      buttonText: "SUBSCRIBE NOW",
-      bgColor: "#5B3A2F",
-      isDark: true,
-      onButtonClick: () => window.location.href = '/join?plan=caffeine-royalty',
+      onButtonClick: () => window.location.href = '/join?plan=supreme-brew-club',
     },
   ] as const;
-
-  const mealPlans = [
-    {
-      title: "5-Day Meal Prep",
-      description: "Five chef-prepared meals for the week. Easy, balanced, and delicious.",
-      price: "$165 EC",
-      benefits: [
-        "$33 EC per day",
-        "Pause, skip or cancel at any time.",
-        "Member-only perks"
-      ],
-      buttonText: "SUBSCRIBE NOW",
-      bgColor: "#D7E8D4",
-      onButtonClick: () => window.location.href = '/join?plan=meal-5',
-    },
-    {
-      title: "10-Day Meal Prep",
-      description: "Ten meals to cover two solid weeks of good eating.",
-      price: "$310 EC",
-      benefits: [
-        "$31 EC per day",
-        "Flexible scheduling",
-        "Member-only perks"
-      ],
-      buttonText: "SUBSCRIBE NOW",
-      bgColor: "#E0F3F1",
-      onButtonClick: () => window.location.href = '/join?plan=meal-10',
-    },
-    {
-      title: "15-Day Meal Prep",
-      description: "Fifteen meals for consistent rhythm and value.",
-      price: "$435 EC",
-      benefits: [
-        "$29 EC per day",
-        "Pause or skip as needed",
-        "Member-only perks"
-      ],
-      buttonText: "SUBSCRIBE NOW",
-      bgColor: "#F3E3F1",
-      onButtonClick: () => window.location.href = '/join?plan=meal-15',
-    },
-    {
-      title: "20-Day Meal Prep",
-      description: "Twenty meals. Best for full routine coverage.",
-      price: "$540 EC",
-      benefits: [
-        "$27 EC per day",
-        "Flexible scheduling",
-        "Member-only perks"
-      ],
-      buttonText: "SUBSCRIBE NOW",
-      bgColor: "#D4E1F7",
-      onButtonClick: () => window.location.href = '/join?plan=meal-20',
-    },
-  ] as const;
-
-  const plansToRender = selectedCategory === 'coffee' ? coffeePlans : mealPlans;
 
   return (
     <section id="subscribe" className="py-12 sm:py-14 md:py-16 lg:py-24 bg-[var(--color-porcelain)] relative overflow-hidden">
@@ -600,124 +510,33 @@ function SubscribeSection() {
         aria-hidden="true"
       />
       <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
-        {/* Intro + Toggle */}
+        {/* Intro */}
         <div className="mb-8 sm:mb-10 md:mb-12 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div>
             <h2 className="text-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[var(--color-accent)] leading-[1.1] mb-4 sm:mb-6">
               Subscribe<br />Today & Save
             </h2>
             <p className="text-sm sm:text-base lg:text-lg text-[var(--color-ink)]/70 leading-relaxed max-w-lg">
-              Subscribe for a never‑ending cup and member perks. Calm, effortless, good value.
+              Join the club and enjoy free meals plus member savings. Calm, effortless, good value.
             </p>
-          </div>
-          <div className="md:mb-1">
-            <div className="inline-flex items-center bg-white border border-[var(--color-accent)]/20 rounded-full p-1">
-              <button
-                onClick={() => setSelectedCategory('coffee')}
-                className={`${selectedCategory === 'coffee' ? 'bg-[var(--color-accent)] text-white' : 'text-[var(--color-accent)]'} px-4 py-2 rounded-full text-sm font-semibold transition-colors`}
-                aria-pressed={selectedCategory === 'coffee'}
-              >
-                Coffee
-              </button>
-              <button
-                onClick={() => setSelectedCategory('meal')}
-                className={`${selectedCategory === 'meal' ? 'bg-[var(--color-accent)] text-white' : 'text-[var(--color-accent)]'} px-4 py-2 rounded-full text-sm font-semibold transition-colors`}
-                aria-pressed={selectedCategory === 'meal'}
-              >
-                Meal Prep
-              </button>
-            </div>
           </div>
         </div>
 
-        {/* Horizontal Scroll Cards with Navigation */}
-        <div className="relative">
-          {/* Mobile: Full width scroll container with gradient hint */}
-          <div className="md:hidden relative -mx-5">
-            <div 
-              ref={scrollRef}
-              className="overflow-x-scroll overflow-y-hidden pb-4 snap-x snap-mandatory"
-              style={{ 
-                scrollbarWidth: 'none', 
-                msOverflowStyle: 'none',
-                WebkitOverflowScrolling: 'touch'
-              }}
-            >
-              <div className="flex gap-4 px-5">
-                {plansToRender.map((plan, idx) => (
-                  <CleanSubscriptionCard
-                    key={`mobile-${selectedCategory}-${idx}`}
-                    title={plan.title}
-                    description={plan.description}
-                    price={plan.price}
-                    savings={(plan as any).savings}
-                    benefits={plan.benefits as any}
-                    buttonText={plan.buttonText}
-                    bgColor={plan.bgColor}
-                    isDark={(plan as any).isDark}
-                    onButtonClick={plan.onButtonClick}
-                  />
-                ))}
-              </div>
-            </div>
-            {/* Scroll indicator gradient - right edge */}
-            <div className="absolute top-0 right-0 bottom-4 w-16 bg-gradient-to-l from-[var(--color-porcelain)] via-[var(--color-porcelain)]/70 to-transparent pointer-events-none" />
-            {/* Animated scroll hint */}
-            <div className="absolute bottom-10 right-6 flex items-center gap-1.5 text-[var(--color-accent)]/50 text-[11px] font-medium animate-pulse">
-              <span className="tracking-wide">Swipe</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="animate-bounce-x">
-                <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-          </div>
-
-          {/* Tablet/Desktop: Container with arrows */}
-          <div className="hidden md:flex items-center gap-2 sm:gap-4">
-            {/* Left Arrow */}
-            <button
-              onClick={() => scroll('left')}
-              className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[var(--color-accent)]/10 hover:bg-[var(--color-accent)]/20 flex items-center justify-center transition-all duration-200 text-[var(--color-accent)]"
-              aria-label="Scroll left"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="sm:w-5 sm:h-5">
-                <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-
-            {/* Scroll Container */}
-            <div 
-              ref={scrollRef}
-              className="overflow-x-auto overflow-y-hidden flex-grow pb-4 sm:pb-6 scroll-smooth"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              <div className="flex gap-4 sm:gap-5 md:gap-6 min-w-max">
-                {plansToRender.map((plan, idx) => (
-                  <CleanSubscriptionCard
-                    key={`desktop-${selectedCategory}-${idx}`}
-                    title={plan.title}
-                    description={plan.description}
-                    price={plan.price}
-                    savings={(plan as any).savings}
-                    benefits={plan.benefits as any}
-                    buttonText={plan.buttonText}
-                    bgColor={plan.bgColor}
-                    isDark={(plan as any).isDark}
-                    onButtonClick={plan.onButtonClick}
-                  />
-                ))}
-              </div>
-          </div>
-
-            {/* Right Arrow */}
-            <button
-              onClick={() => scroll('right')}
-              className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[var(--color-accent)]/10 hover:bg-[var(--color-accent)]/20 flex items-center justify-center transition-all duration-200 text-[var(--color-accent)]"
-              aria-label="Scroll right"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="sm:w-5 sm:h-5">
-                <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
+        {/* Centered grid of plans */}
+        <div className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-5xl mx-auto">
+            {plans.map((plan, idx) => (
+              <CleanSubscriptionCard
+                key={`grid-${idx}`}
+                title={plan.title}
+                description={plan.description}
+                price={plan.price}
+                benefits={plan.benefits as any}
+                buttonText={plan.buttonText}
+                bgColor={plan.bgColor}
+                onButtonClick={plan.onButtonClick}
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -1021,18 +840,6 @@ function Polaroid({
   rotate?: string;
   zIndex?: number;
 }) {
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
-    let isMounted = true;
-    const img = new window.Image();
-    img.onload = () => { if (isMounted) setIsLoaded(true); };
-    img.onerror = () => { if (isMounted) setIsLoaded(false); };
-    img.src = image;
-    return () => { isMounted = false; };
-  }, [image]);
-
-  if (!isLoaded) return null;
   return (
     <figure 
       className={`relative bg-white p-2.5 sm:p-3 md:p-4 border border-[var(--color-ink)]/10 rounded-sm transition-transform duration-200 ease-out cursor-pointer hover:scale-110 sm:hover:scale-[1.4] hover:rotate-0 hover:!z-[1000] will-change-transform ${rotate ?? ''}`}
@@ -1040,13 +847,16 @@ function Polaroid({
         zIndex: zIndex ?? 1,
       }}
     >
-      <img
-        src={image}
-        alt=""
-        className="w-full aspect-[4/5] sm:w-[160px] sm:h-[200px] md:w-[200px] md:h-[240px] object-cover object-center block"
-        loading="eager"
-        decoding="async"
-      />
+      <div className="relative w-full aspect-[4/5] sm:w-[160px] sm:h-[200px] md:w-[200px] md:h-[240px]">
+        <Image
+          src={image}
+          alt=""
+          fill
+          className="object-cover object-center"
+          sizes="(min-width: 1024px) 200px, (min-width: 640px) 160px, 45vw"
+          priority={false}
+        />
+      </div>
       <figcaption className="text-[9px] sm:text-[10px] md:text-xs text-[var(--color-ink)]/70 mt-1.5 sm:mt-2 text-center">
         {caption}
       </figcaption>
@@ -1063,10 +873,15 @@ function CoffeeCard({
 }) {
   return (
     <div className="flex-none w-[85vw] sm:w-[75vw] md:w-[60vw] lg:w-[50vw]">
-      <div 
-        className="h-[50vh] sm:h-[60vh] md:h-[65vh] lg:h-[75vh] bg-cover bg-center rounded-lg overflow-hidden"
-        style={{ backgroundImage: `url("${encodeURI(image)}")` }}
-      />
+      <div className="relative h-[50vh] sm:h-[60vh] md:h-[65vh] lg:h-[75vh] rounded-lg overflow-hidden">
+        <Image
+          src={image}
+          alt={name}
+          fill
+          className="object-cover"
+          sizes="(min-width: 1024px) 50vw, (min-width: 768px) 60vw, (min-width: 640px) 75vw, 85vw"
+        />
+      </div>
       <div className="mt-3 sm:mt-4">
         <h3 className="text-serif text-xl sm:text-2xl lg:text-3xl text-[var(--color-accent)]">
           {name}

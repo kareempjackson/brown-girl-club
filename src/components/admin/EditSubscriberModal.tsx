@@ -11,11 +11,9 @@ interface EditSubscriberModalProps {
   onClose: () => void;
 }
 
-const PLANS = {
-  "3-coffees": { name: "12 coffees / month", price: 200, usage: 12 },
-  "daily-coffee": { name: "30 coffees / month", price: 450, usage: 30 },
-  "creator": { name: "60 coffees / month", price: 800, usage: 60 },
-  "unlimited": { name: "120 coffees / month", price: 1400, usage: 120 }
+const PLANS: Record<string, { name: string; price: number; usage: number }> = {
+  "daily-brew": { name: "The Daily Brew", price: 25, usage: 2 },
+  "supreme-brew-club": { name: "The Supreme Brew Club", price: 35, usage: 4 },
 };
 
 export function EditSubscriberModal({
@@ -30,7 +28,7 @@ export function EditSubscriberModal({
   const [markPaidLoading, setMarkPaidLoading] = useState(false);
 
   const handlePlanChange = (newPlan: PlanId) => {
-    const planData = PLANS[newPlan];
+    const planData = PLANS[newPlan] || { name: String(newPlan), price: 0, usage: 0 };
     setFormData({
       ...formData,
       plan: newPlan,
@@ -41,7 +39,7 @@ export function EditSubscriberModal({
   };
 
   const handleStatusChange = (newStatus: SubscriptionStatus) => {
-    const planPrice = PLANS[formData.plan].price;
+    const planPrice = PLANS[formData.plan]?.price ?? 0;
     setFormData({
       ...formData,
       status: newStatus,
@@ -196,10 +194,8 @@ export function EditSubscriberModal({
                 onChange={e => handlePlanChange(e.target.value as PlanId)}
                 className="w-full px-4 py-3 bg-white border border-[var(--color-ink)]/15 rounded-xl text-sm text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-all"
               >
-                <option value="3-coffees">12 coffees / month - $200</option>
-                <option value="daily-coffee">30 coffees / month - $450</option>
-                <option value="creator">60 coffees / month - $800</option>
-                <option value="unlimited">120 coffees / month - $1400</option>
+                <option value="daily-brew">The Daily Brew — $25</option>
+                <option value="supreme-brew-club">The Supreme Brew Club — $35</option>
               </select>
             </div>
 

@@ -14,7 +14,7 @@ export default function Page() {
 }
 
 function JoinClient() {
-  const [form, setForm] = useState({ name: "", email: "", phone: "", planId: "daily-coffee" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", planId: "daily-brew" });
   const [isSubmitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<null | { subscriptionId: string; planName: string }>(null);
   const [error, setError] = useState<string | null>(null);
@@ -23,18 +23,8 @@ function JoinClient() {
   useEffect(() => {
     const param = searchParams.get("plan");
     const allowed = new Set([
-      "chill-mode",
-      "daily-coffee",
-      "double-shot",
-      "caffeine-royalty",
-      "meal-5",
-      "meal-10",
-      "meal-15",
-      "meal-20",
-      // Legacy aliases that normalize on the API
-      "3-coffees",
-      "creator",
-      "unlimited",
+      "daily-brew",
+      "supreme-brew-club",
     ]);
     if (param && allowed.has(param) && param !== form.planId) {
       setForm((prev) => ({ ...prev, planId: param }));
@@ -99,16 +89,8 @@ function JoinClient() {
                 onChange={(e) => setForm({ ...form, planId: e.target.value })}
                 className="w-full px-4 py-3 bg-white border border-[var(--color-ink)]/15 rounded-xl text-sm text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-all"
               >
-                <option value="chill-mode">Chill Mode — 12 Coffees / Month</option>
-                <option value="daily-coffee">Daily Fix — 30 Coffees / Month</option>
-                <option value="double-shot">Double Shot — 60 Coffees / Month</option>
-                <option value="caffeine-royalty">Caffeine Royalty — 120 Coffees / Month</option>
-                <optgroup label="Meal Prep">
-                  <option value="meal-5">5-Day Meal Prep — $165 EC ($33/day)</option>
-                  <option value="meal-10">10-Day Meal Prep — $310 EC ($31/day)</option>
-                  <option value="meal-15">15-Day Meal Prep — $435 EC ($29/day)</option>
-                  <option value="meal-20">20-Day Meal Prep — $540 EC ($27/day)</option>
-                </optgroup>
+                <option value="daily-brew">The Daily Brew — $25 USD / month</option>
+                <option value="supreme-brew-club">The Supreme Brew Club — $35 USD / month</option>
               </select>
             </div>
 

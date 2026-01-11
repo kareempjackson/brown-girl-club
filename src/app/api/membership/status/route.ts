@@ -31,18 +31,21 @@ export async function POST(request: NextRequest) {
       });
 
       // Create invoice (cash payment)
-      const planPrices: Record<string, number> = {
-        // normalized ids
-        'chill-mode': 200,
-        'daily-coffee': 450,
-        'double-shot': 800,
-        'caffeine-royalty': 1400,
-        // legacy aliases
-        '3-coffees': 200,
-        'creator': 800,
-        'unlimited': 1400,
+      const planPrices: Record<string, { amount: number; currency: 'USD' | 'XCD' }> = {
+        // New plans (USD)
+        'daily-brew': { amount: 25, currency: 'USD' },
+        'supreme-brew-club': { amount: 35, currency: 'USD' },
+        // Legacy (XCD)
+        'chill-mode': { amount: 200, currency: 'XCD' },
+        'daily-coffee': { amount: 450, currency: 'XCD' },
+        'double-shot': { amount: 800, currency: 'XCD' },
+        'caffeine-royalty': { amount: 1400, currency: 'XCD' },
+        '3-coffees': { amount: 200, currency: 'XCD' },
+        'creator': { amount: 800, currency: 'XCD' },
+        'unlimited': { amount: 1400, currency: 'XCD' },
       };
-      const amount = planPrices[subscription.plan_id] ?? 0;
+      const priceInfo = planPrices[subscription.plan_id] ?? { amount: 0, currency: 'USD' as const };
+      const amount = priceInfo.amount;
       let invoice: any = null;
       let invoiceError: any = null;
       try {
@@ -52,7 +55,7 @@ export async function POST(request: NextRequest) {
             user_id: subscription.user_id,
             subscription_id: subscription.id,
             amount,
-            currency: 'XCD',
+            currency: priceInfo.currency,
             status: 'paid',
             paid_at: new Date().toISOString(),
             issued_by: 'cashier',
@@ -74,7 +77,7 @@ export async function POST(request: NextRequest) {
               user_id: subscription.user_id,
               subscription_id: subscription.id,
               amount,
-              currency: 'XCD',
+            currency: priceInfo.currency,
               status: 'paid',
               paid_at: new Date().toISOString(),
             })
@@ -95,7 +98,7 @@ export async function POST(request: NextRequest) {
             .insert({
               user_id: subscription.user_id,
               amount,
-              currency: 'XCD',
+            currency: priceInfo.currency,
               status: 'paid',
               paid_at: new Date().toISOString(),
             })
@@ -116,7 +119,7 @@ export async function POST(request: NextRequest) {
           name: (subscription as any).users?.name || 'Member',
           planName: subscription.plan_name,
           amount,
-          currency: 'XCD',
+          currency: priceInfo.currency,
           invoiceId: invoice.id,
         });
         await sendMail({

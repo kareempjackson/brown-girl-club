@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { verifyUserToken } from '@/lib/user-auth';
 import { supabase } from '@/lib/supabase';
-import { getTodayUsageSummary, getRedemptionHistory, validateRedemption, getCoffeeUsageInPeriod, getCoffeeAllowanceForPeriod, PLAN_LIMITS } from '@/lib/redemption';
+import { getTodayUsageSummary, getRedemptionHistory, validateRedemption, getCoffeeUsageInPeriod, getCoffeeAllowanceForPeriod, PLAN_LIMITS, getFoodUsageInPeriod } from '@/lib/redemption';
 import { normalizePlanId, getPlanDisplayName } from '@/lib/plans';
 import type { Database } from '@/lib/supabase';
 
@@ -96,14 +96,16 @@ export async function GET(request: NextRequest) {
     let limits: any = {};
     if (activeSubscription) {
       try {
-        const coffeeValidation = await validateRedemption(user.id, 'coffee');
         const foodValidation = await validateRedemption(user.id, 'food');
-        // Monthly usage across period (for all monthly plans; support legacy IDs by normalizing)
+        // Monthly usage across period (support new meal plans and legacy coffee plans)
         let coffeesThisPeriod: number | undefined = undefined;
         let coffeeAllowance: number | undefined = undefined;
+        let foodsThisPeriod: number | undefined = undefined;
+        let foodAllowance: number | undefined = undefined;
         const normalizedPlanId = normalizePlanId(activeSubscription.plan_id);
-        const hasMonthly = PLAN_LIMITS[normalizedPlanId as keyof typeof PLAN_LIMITS]?.coffeePerMonth;
-        if (hasMonthly) {
+        const hasMonthlyCoffee = PLAN_LIMITS[normalizedPlanId as keyof typeof PLAN_LIMITS]?.coffeePerMonth;
+        const hasMonthlyFood = PLAN_LIMITS[normalizedPlanId as keyof typeof PLAN_LIMITS]?.foodPerMonth;
+        if (hasMonthlyCoffee) {
           coffeesThisPeriod = await getCoffeeUsageInPeriod({
             subscriptionId: activeSubscription.id,
             periodStart: activeSubscription.current_period_start,
@@ -116,17 +118,27 @@ export async function GET(request: NextRequest) {
             periodEnd: activeSubscription.current_period_end,
           });
         }
+        if (hasMonthlyFood) {
+          foodsThisPeriod = await getFoodUsageInPeriod({
+            subscriptionId: activeSubscription.id,
+            periodStart: activeSubscription.current_period_start,
+            periodEnd: activeSubscription.current_period_end,
+          });
+          foodAllowance = PLAN_LIMITS[normalizedPlanId as keyof typeof PLAN_LIMITS]?.foodPerMonth;
+        }
 
         limits = {
-          remainingCoffees: coffeeValidation.remainingCoffees,
           remainingFood: foodValidation.remainingFood,
-          unlimited: coffeeValidation.subscription && coffeeValidation.subscription.plan_id === 'unlimited' ? true : false,
+          // legacy coffee fields
           period: {
-            start: coffeeValidation.subscription.current_period_start,
-            end: coffeeValidation.subscription.current_period_end,
+            start: activeSubscription.current_period_start,
+            end: activeSubscription.current_period_end,
           },
           periodCoffeeUsage: coffeesThisPeriod,
           periodCoffeeAllowance: coffeeAllowance,
+          // new meal fields
+          periodFoodUsage: foodsThisPeriod,
+          periodFoodAllowance: foodAllowance,
         };
       } catch (e) {
         // swallow limits errors to not break dashboard
@@ -164,9 +176,9 @@ export async function GET(request: NextRequest) {
           redeemedAt: r.redeemed_at,
         })),
         period: activeSubscription ? {
-          coffees: limits?.periodCoffeeUsage ?? 0,
-          allowance: limits?.periodCoffeeAllowance ?? PLAN_LIMITS[normalizePlanId(activeSubscription.plan_id) as keyof typeof PLAN_LIMITS]?.coffeePerMonth ?? 30,
-          remaining: Math.max(0, (limits?.periodCoffeeAllowance ?? PLAN_LIMITS[normalizePlanId(activeSubscription.plan_id) as keyof typeof PLAN_LIMITS]?.coffeePerMonth ?? 30) - (limits?.periodCoffeeUsage ?? 0)),
+          meals: limits?.periodFoodUsage ?? 0,
+          allowance: limits?.periodFoodAllowance ?? PLAN_LIMITS[normalizePlanId(activeSubscription.plan_id) as keyof typeof PLAN_LIMITS]?.foodPerMonth ?? 0,
+          remaining: Math.max(0, (limits?.periodFoodAllowance ?? PLAN_LIMITS[normalizePlanId(activeSubscription.plan_id) as keyof typeof PLAN_LIMITS]?.foodPerMonth ?? 0) - (limits?.periodFoodUsage ?? 0)),
           start: activeSubscription.current_period_start,
           end: activeSubscription.current_period_end,
         } : undefined,

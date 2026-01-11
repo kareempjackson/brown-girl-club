@@ -6,36 +6,19 @@ import { Button } from "@/components/ui/button";
 
 const PLANS = [
   {
-    id: "3-coffees",
-    title: "The Chill Mode — 12 Coffees / Month",
-    price: "$200",
-    priceValue: 200,
-    savings: "save $65",
-    benefits: ["Food specials & discounts", "Pause, skip or cancel anytime", "Member-only perks"]
-  },
-  {
-    id: "daily-coffee",
-    title: "The Daily Fix — 30 Coffees / Month",
-    price: "$450",
-    priceValue: 450,
-    savings: "save $216",
-    benefits: ["1 coffee per day", "20% off food items", "1 free dessert per week"],
+    id: "daily-brew",
+    title: "The Daily Brew — $25 / Month",
+    price: "$25",
+    priceValue: 25,
+    benefits: ["Two free meals per month", "15% savings on full menu offerings"],
     current: true
   },
   {
-    id: "creator",
-    title: "The Double Shot Life — 60 Coffees / Month",
-    price: "$800",
-    priceValue: 800,
-    savings: "save $282",
-    benefits: ["2 coffees per day", "20% off food items", "1 free lunch per week"]
-  },
-  {
-    id: "unlimited",
-    title: "The Caffeine Royalty — 120 Coffees / Month",
-    price: "$1400",
-    priceValue: 1400,
-    benefits: ["Unlimited coffee", "20% off food items", "Choice: 1 free breakfast or lunch per week"]
+    id: "supreme-brew-club",
+    title: "The Supreme Brew Club — $35 / Month",
+    price: "$35",
+    priceValue: 35,
+    benefits: ["4 free meals per month", "20% off menu offerings"]
   }
 ];
 
@@ -104,9 +87,6 @@ export default function ManageSubscriptionPage() {
                   <p className="text-3xl font-light text-[var(--color-ink)]">
                     {plan.price}
                   </p>
-                  {plan.savings && (
-                    <span className="text-sm text-[var(--color-ink)]/60">({plan.savings})</span>
-                  )}
                 </div>
 
                 <ul className="space-y-2 mb-6">

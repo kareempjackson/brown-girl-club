@@ -8,6 +8,10 @@ import { normalizePlanId, getPlanDisplayName } from '@/lib/plans';
 import type { Database } from '@/lib/supabase';
 
 const PLAN_PRICES: Record<string, number> = {
+  // New plans (USD)
+  'daily-brew': 25,
+  'supreme-brew-club': 35,
+  // Legacy plans (XCD)
   'chill-mode': 200,
   'daily-coffee': 450,
   'double-shot': 800,

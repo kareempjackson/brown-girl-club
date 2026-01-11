@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-type PlanId = "3-coffees" | "daily-coffee" | "creator" | "unlimited";
+type PlanId = string;
 type ItemType = 'coffee' | 'food' | 'dessert';
 
 interface Subscriber {
