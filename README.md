@@ -1,4 +1,4 @@
-# Brown Girl Club – Brand Guide & UI Kit
+# Brown Girl Club – Brand Guide & UI Kit --
 
 A production-ready editorial design system inspired by WatchHouse. Built with Next.js 15, Tailwind v4, and Framer Motion.
 
